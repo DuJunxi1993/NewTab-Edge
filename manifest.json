@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "NewTab - Cyberpunk",
-  "version": "1.0.0",
-  "description": "A cyberpunk-styled new tab page with custom wallpaper, blur/brightness controls, and multi-engine search.",
+  "name": "NewTab - Edge",
+  "version": "1.0.0-edge",
+  "description": "A Windows 11 / Edge-styled new tab page with custom wallpaper, blur/brightness controls, and multi-engine search.",
   "chrome_url_overrides": {
     "newtab": "newtab.html"
   },
