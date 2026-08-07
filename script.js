@@ -4,6 +4,9 @@
 
 // ---------- Built-in wallpapers (local presets + royalty-free Unsplash) ----------
 const BUILTIN_WALLPAPERS = [
+  { id: 'edge-solid', type: 'color', url: '#f3f3f3', label: 'Edge Surface' },
+  { id: 'edge-cream', type: 'color', url: '#f8f4f1', label: 'Warm Paper' },
+  { id: 'edge-pure',  type: 'color', url: '#ffffff', label: 'Pure White' },
   { id: 'local-1', url: 'Buildin_Image/Image_1.JPG', label: 'Preset 1' },
   { id: 'local-2', url: 'Buildin_Image/Image_2.jpeg', label: 'Preset 2' },
   { id: 'local-3', url: 'Buildin_Image/Image_3.jpg', label: 'Preset 3' },
@@ -122,15 +125,26 @@ tickClock();
 // ---------- Wallpaper ----------
 function applyWallpaper() {
   let url = '';
-  if (state.wallpaper.type === 'url') {
+  let isColor = false;
+  if (state.wallpaper.type === 'color') {
+    url = state.wallpaper.value;
+    isColor = true;
+  } else if (state.wallpaper.type === 'url') {
     url = state.wallpaper.value;
   } else if (state.wallpaper.type === 'upload') {
     url = state.wallpaper.value;
   } else if (state.wallpaper.type === 'builtin') {
     const found = BUILTIN_WALLPAPERS.find((w) => w.id === state.wallpaper.value);
-    url = found ? found.url : '';
+    if (found) {
+      url = found.url;
+      isColor = found.type === 'color';
+    }
   }
-  if (url) {
+  if (isColor) {
+    wallpaperEl.style.backgroundImage = 'none';
+    wallpaperEl.style.backgroundColor = url;
+  } else if (url) {
+    wallpaperEl.style.backgroundColor = 'transparent';
     wallpaperEl.style.backgroundImage = `url("${url}")`;
   }
 }
@@ -354,4 +368,6 @@ async function init() {
 }
 
 init();
+
+
 
