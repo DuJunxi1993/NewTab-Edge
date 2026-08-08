@@ -36,6 +36,7 @@ const DEFAULT_STATE = {
   brightness: 100,
   saturation: 100,
   engine: 'baidu',
+  themeMode: 'auto',  // 'auto' | 'light' | 'dark'
 };
 
 let state = { ...DEFAULT_STATE };
@@ -390,10 +391,36 @@ async function init() {
   renderBuiltinGrid();
   setEngine(state.engine);
   setSource('url');
+  applyTheme();
   searchInput.focus();
   bindThemeListener();
+  bindThemeControls();
 }
 
+function applyTheme() {
+  const mode = state.themeMode || 'auto';
+  const html = document.documentElement;
+  html.classList.remove('theme-dark', 'theme-light');
+  if (mode === 'dark') html.classList.add('theme-dark');
+  else if (mode === 'light') html.classList.add('theme-light');
+  // 'auto' -> no class, let @media (prefers-color-scheme: dark) apply
+  document.querySelectorAll('.theme-tab').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.theme === mode);
+  });
+  // Re-resolve wallpaper color (it reads CSS vars which just changed)
+  if (!applyWallpaperColor()) applyWallpaper();
+  renderBuiltinGrid();
+}
+
+function bindThemeControls() {
+  document.querySelectorAll('.theme-tab').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.themeMode = btn.dataset.theme;
+      applyTheme();
+      persist();
+    });
+  });
+}
 function bindThemeListener() {
   const mq = window.matchMedia('(prefers-color-scheme: dark)');
   const handler = () => {
