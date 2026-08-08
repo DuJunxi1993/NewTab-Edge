@@ -47,6 +47,20 @@
   --saturation: 100%;
 }
 
+  /* Solid-color wallpaper presets — switched by prefers-color-scheme */
+  --edge-solid-color: #f3f3f3;
+  --edge-cream-color: #f8f4f1;
+  --edge-pure-color:  #ffffff;
+
+  /* Title halos — overridden in @media dark block */
+  --title-text-shadow:
+    0 0 14px rgba(255, 255, 255, 0.75),
+    0 0 28px rgba(255, 255, 255, 0.40),
+    0 1px 3px rgba(0, 0, 0, 0.18);
+  --subtitle-text-shadow:
+    0 0 10px rgba(255, 255, 255, 0.80),
+    0 1px 2px rgba(0, 0, 0, 0.15);
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -222,10 +236,7 @@ body::before {
   text-align: center;
   margin-bottom: 8px;
   color: var(--text-primary);
-  text-shadow:
-    0 0 14px rgba(255, 255, 255, 0.75),
-    0 0 28px rgba(255, 255, 255, 0.4),
-    0 1px 3px rgba(0, 0, 0, 0.18);
+  text-shadow: var(--title-text-shadow);
   animation: titleFade 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) both;
 }
 
@@ -241,9 +252,7 @@ body::before {
   vertical-align: 0.1em;
   margin: 0 0.25em;
   font-weight: 400;
-  text-shadow:
-    0 0 8px rgba(255, 255, 255, 0.85),
-    0 1px 2px rgba(0, 0, 0, 0.18);
+  text-shadow: var(--title-text-shadow);
 }
 
 .subtitle {
@@ -253,9 +262,7 @@ body::before {
   color: var(--text-secondary);
   margin-bottom: 40px;
   text-align: center;
-  text-shadow:
-    0 0 10px rgba(255, 255, 255, 0.8),
-    0 1px 2px rgba(0, 0, 0, 0.15);
+  text-shadow: var(--subtitle-text-shadow);
 }
 
 /* ===== Search panel (Edge-style Mica card) ===== */
@@ -748,3 +755,48 @@ body::before {
 
 
 
+
+
+/* ================================================
+   Dark theme — Win 11 / Edge dark palette
+   Auto-applied when OS reports prefers-color-scheme: dark.
+   ================================================ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #4cc2ff;
+    --accent-hover: #62cafe;
+    --accent-pressed: #3aa6e3;
+    --accent-light: rgba(76, 194, 255, 0.16);
+    --danger: #ff99a4;
+
+    --bg-gradient: linear-gradient(135deg, #1e1e3a 0%, #2d2540 50%, #1a1a2e 100%);
+
+    --surface: rgba(44, 44, 44, 0.72);
+    --surface-solid: #2c2c2c;
+    --surface-hover: rgba(255, 255, 255, 0.06);
+    --surface-pressed: rgba(255, 255, 255, 0.10);
+
+    --border: rgba(255, 255, 255, 0.10);
+    --border-strong: rgba(255, 255, 255, 0.18);
+
+    --text-primary: #ffffff;
+    --text-secondary: #c5c5c5;
+    --text-tertiary: #8a8a8a;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24), 0 2px 6px rgba(0, 0, 0, 0.20);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.30), 0 8px 24px rgba(0, 0, 0, 0.40);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.36), 0 16px 32px rgba(0, 0, 0, 0.48);
+
+    --edge-solid-color: #2c2c2c;
+    --edge-cream-color: #2a2624;
+    --edge-pure-color:  #1c1c1c;
+
+    --title-text-shadow:
+      0 0 14px rgba(0, 0, 0, 0.85),
+      0 0 28px rgba(0, 0, 0, 0.55),
+      0 1px 2px rgba(0, 0, 0, 0.55);
+    --subtitle-text-shadow:
+      0 0 10px rgba(0, 0, 0, 0.85),
+      0 1px 2px rgba(0, 0, 0, 0.45);
+  }
+}

@@ -164,6 +164,26 @@ function syncSliders() {
   saturationValue.textContent = `${state.saturation}%`;
 }
 
+function resolveColorFromCss(cssVarName) {
+  return getComputedStyle(document.documentElement).getPropertyValue(cssVarName).trim();
+}
+
+function applyWallpaperColor() {
+  // For builtin color presets, resolve the live CSS variable so the
+  // wallpaper auto-switches when the system theme changes.
+  if (state.wallpaper.type === 'builtin') {
+    const found = BUILTIN_WALLPAPERS.find((w) => w.id === state.wallpaper.value);
+    if (found && found.type === 'color' && found.cssVar) {
+      const color = resolveColorFromCss(found.cssVar);
+      if (color) {
+        wallpaperEl.style.backgroundImage = 'none';
+        wallpaperEl.style.backgroundColor = color;
+        return true;
+      }
+    }
+  }
+  return false;
+}
 // ---------- Built-in grid ----------
 function renderBuiltinGrid() {
   builtinGrid.innerHTML = '';
@@ -173,7 +193,13 @@ function renderBuiltinGrid() {
     if (state.wallpaper.type === 'builtin' && state.wallpaper.value === w.id) {
       div.classList.add('active');
     }
-    div.style.backgroundImage = `url("${w.url}")`;
+    if (w.type === 'color') {
+      div.style.backgroundImage = 'none';
+      const cssColor = w.cssVar ? resolveColorFromCss(w.cssVar) : w.url;
+      div.style.backgroundColor = cssColor || w.url;
+    } else {
+      div.style.backgroundImage = `url("${w.url}")`;
+    }
     div.title = w.label;
     div.dataset.id = w.id;
     div.addEventListener('click', () => {
@@ -359,6 +385,24 @@ async function init() {
   setEngine(state.engine);
   setSource('url');
   searchInput.focus();
+  bindThemeListener();
+}
+
+function bindThemeListener() {
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  const handler = () => {
+    if (applyWallpaperColor()) {
+      renderBuiltinGrid();
+      return;
+    }
+    applyWallpaper();
+    renderBuiltinGrid();
+  };
+  if (mq.addEventListener) {
+    mq.addEventListener('change', handler);
+  } else if (mq.addListener) {
+    mq.addListener(handler);
+  }
 }
 
 init();
