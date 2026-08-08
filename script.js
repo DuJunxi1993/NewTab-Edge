@@ -4,19 +4,9 @@
 
 // ---------- Built-in wallpapers (local presets + royalty-free Unsplash) ----------
 const BUILTIN_WALLPAPERS = [
-  { id: 'edge-solid', type: 'color', url: '#f3f3f3', label: 'Edge Surface' },
-  { id: 'edge-cream', type: 'color', url: '#f8f4f1', label: 'Warm Paper' },
-  { id: 'edge-pure',  type: 'color', url: '#ffffff', label: 'Pure White' },
-  { id: 'local-1', url: 'Buildin_Image/Image_1.JPG', label: 'Preset 1' },
-  { id: 'local-2', url: 'Buildin_Image/Image_2.jpeg', label: 'Preset 2' },
-  { id: 'local-3', url: 'Buildin_Image/Image_3.jpg', label: 'Preset 3' },
-  { id: 'local-4', url: 'Buildin_Image/Image_4.jpg', label: 'Preset 4' },
-  { id: 'cyber-1', url: 'https://images.unsplash.com/photo-1542856391-010fb87dcfed?w=1920&q=80', label: 'Neon City' },
-  { id: 'cyber-2', url: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1920&q=80', label: 'Red Matrix' },
-  { id: 'cyber-3', url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1920&q=80', label: 'Code Rain' },
-  { id: 'cyber-4', url: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1920&q=80', label: 'Retro Grid' },
-  { id: 'cyber-5', url: 'https://images.unsplash.com/photo-1531259683007-016a7b628fc3?w=1920&q=80', label: 'Night Skyline' },
-  { id: 'cyber-6', url: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=1920&q=80', label: 'Tokyo Night' },
+  { id: 'edge-solid', type: 'color', cssVar: '--edge-solid-color', label: 'Edge Surface' },
+  { id: 'edge-cream', type: 'color', cssVar: '--edge-cream-color', label: 'Warm Paper' },
+  { id: 'edge-pure',  type: 'color', cssVar: '--edge-pure-color',  label: 'Pure White' },
 ];
 
 // ---------- Search engines ----------
@@ -32,6 +22,10 @@ const ENGINES = {
   google: {
     label: 'GOOGLE',
     url: (q) => `https://www.google.com/search?q=${encodeURIComponent(q)}`,
+  },
+  github: {
+    label: 'GITHUB',
+    url: (q) => `https://github.com/search?q=${encodeURIComponent(q)}`,
   },
 };
 
@@ -271,7 +265,7 @@ function setEngine(name) {
   if (!ENGINES[name]) return;
   state.engine = name;
   searchTabs.forEach((t) => t.classList.toggle('active', t.dataset.engine === name));
-  engineLabel.textContent = `ENGINE: ${ENGINES[name].label}`;
+  engineLabel.textContent = ENGINES[name].label.charAt(0) + ENGINES[name].label.slice(1).toLowerCase();
   persist();
 }
 
@@ -368,6 +362,9 @@ async function init() {
 }
 
 init();
+
+
+
 
 
 
