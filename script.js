@@ -130,8 +130,14 @@ function applyWallpaper() {
   } else if (state.wallpaper.type === 'builtin') {
     const found = BUILTIN_WALLPAPERS.find((w) => w.id === state.wallpaper.value);
     if (found) {
-      url = found.url;
-      isColor = found.type === 'color';
+      if (found.type === 'color' && found.cssVar) {
+        // Theme-aware: resolve the live CSS variable (e.g. --edge-solid-color)
+        const cssColor = resolveColorFromCss(found.cssVar);
+        url = cssColor || found.url || '';
+        isColor = true;
+      } else {
+        url = found.url;
+      }
     }
   }
   if (isColor) {

@@ -45,8 +45,6 @@
   --blur: 0px;
   --brightness: 100%;
   --saturation: 100%;
-}
-
   /* Solid-color wallpaper presets — switched by prefers-color-scheme */
   --edge-solid-color: #f3f3f3;
   --edge-cream-color: #f8f4f1;
@@ -65,7 +63,6 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-}
 
 html, body {
   height: 100%;
