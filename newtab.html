@@ -97,8 +97,9 @@
   </div>
 
   <!-- Settings Panel -->
-  <aside class="settings-panel" id="settingsPanel" aria-hidden="true">
-    <div class="settings-backdrop" id="settingsBackdrop"></div>
+      <div class="settings-backdrop" id="settingsBackdrop"></div
+<aside class="settings-panel" id="settingsPanel" aria-hidden="true">
+>
     <div class="settings-card">
       <div class="settings-header">
         <div class="settings-title">
@@ -198,8 +199,9 @@
 
 
   <!-- ===== Tools side panel (slides in from right) ===== -->
-  <aside class="tools-panel" id="toolsPanel" aria-hidden="true">
-    <div class="tools-backdrop" id="toolsBackdrop" tabindex="-1"></div>
+      <div class="tools-backdrop" id="toolsBackdrop" tabindex="-1"></div>
+<aside class="tools-panel" id="toolsPanel" aria-hidden="true">
+
     <div class="tools-sheet" role="dialog" aria-modal="true" aria-label="Tools">
       <header class="tools-sheet-header">
         <h2 class="tools-sheet-title">
@@ -407,8 +409,12 @@
                 <input type="text" class="fluent-input" placeholder="选项 3" data-idx="2" />
                 <input type="text" class="fluent-input" placeholder="选项 4" data-idx="3" />
                 <input type="text" class="fluent-input" placeholder="选项 5" data-idx="4" />
+                <input type="text" class="fluent-input" placeholder="选项 6" data-idx="5" />
               </div>
-              <div class="button-row"><button class="fluent-btn fluent-btn-primary" id="randomGo" type="button">开始随机</button></div>
+              <div class="button-row">
+                <button class="fluent-btn fluent-btn-primary" id="randomGo" type="button">开始随机</button>
+                <button class="fluent-btn" id="randomReset" type="button">重置</button>
+              </div>
               <div class="random-result empty" id="randomResult"><span class="random-result-placeholder">填入选项后点击随机</span></div>
             </div>
           </div>

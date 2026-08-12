@@ -1,3 +1,46 @@
+
+// ================================================
+// Tools state persistence (chrome.storage.local, falls back to localStorage)
+// Persists across tab close/reopen:
+//   - calcHistory: last N calculator calculations
+//   - randomInputs: random picker's 6 input values
+// ================================================
+const TOOLS_STORAGE_KEY = 'newtab_tools';
+const TOOLS_DEFAULT_STATE = { calcHistory: [], randomInputs: ['', '', '', '', '', ''] };
+
+function toolsLoadState() {
+  return new Promise((resolve) => {
+    try {
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.get(TOOLS_STORAGE_KEY, (data) => {
+          const v = data[TOOLS_STORAGE_KEY] || {};
+          resolve({ ...TOOLS_DEFAULT_STATE, ...v });
+        });
+      } else {
+        const raw = localStorage.getItem(TOOLS_STORAGE_KEY);
+        const v = raw ? JSON.parse(raw) : {};
+        resolve({ ...TOOLS_DEFAULT_STATE, ...v });
+      }
+    } catch (e) { resolve({ ...TOOLS_DEFAULT_STATE }); }
+  });
+}
+
+let toolsSaveTimer = null;
+function toolsSaveState(state) {
+  clearTimeout(toolsSaveTimer);
+  toolsSaveTimer = setTimeout(() => {
+    try {
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.set({ [TOOLS_STORAGE_KEY]: state });
+      } else {
+        localStorage.setItem(TOOLS_STORAGE_KEY, JSON.stringify(state));
+      }
+    } catch (e) { /* ignore */ }
+  }, 200);
+}
+
+let toolsState = { ...TOOLS_DEFAULT_STATE };
+
 /* ================================================
    Tools Side Panel — Controller
    Lives inside newtab.html; theme is inherited from
@@ -14,10 +57,12 @@
   function open() {
     panel.classList.add('open');
     panel.setAttribute('aria-hidden', 'false');
+    document.getElementById('toolsBackdrop')?.classList.add('open');
   }
   function close() {
     panel.classList.remove('open');
     panel.setAttribute('aria-hidden', 'true');
+    document.getElementById('toolsBackdrop')?.classList.remove('open');
   }
   // Expose for main page (script.js) to call
   window.openToolsPanel = open;
@@ -83,7 +128,7 @@ function toast(msg) {
   let op = null;
   let justEvaluated = false;
   let exprBuf = '';
-  let history = [];
+    let history = Array.isArray(toolsState.calcHistory) ? toolsState.calcHistory.slice() : [];
   const HISTORY_MAX = 6;
 
   function setDisplay(v) {
@@ -101,7 +146,7 @@ function toast(msg) {
 
   function pushHistory(expr, result) {
     history.unshift({ expr, result });
-    if (history.length > HISTORY_MAX) history = history.slice(0, HISTORY_MAX);
+    if (history.length > HISTORY_MAX) history = history.slice(0, HISTORY_MAX);    toolsState.calcHistory = history; toolsSaveState(toolsState);
     renderHistory();
   }
 
@@ -370,7 +415,7 @@ function toast(msg) {
   const basePalette = [
     '#000000', '#1f2937', '#4b5563', '#9ca3af', '#ffffff', '#f3f4f6', '#dbeafe', '#fee2e2',
     '#1e3a8a', '#0067c0', '#4cc2ff', '#16a34a', '#dc2626', '#f59e0b', '#facc15', '#fb923c',
-    '#8b5cf6', '#ec4899', '#f43f5e', '#f8f4f1', '#fef3c7', '#dcfce7', '#0f766e', '#1f2937',
+    '#8b5cf6', '#ec4899', '#f43f5e', '#f8f4f1', '#fef3c7', '#dcfce7', '#0f766e', '#475569',
   ];
   paletteCount.textContent = `${basePalette.length} colors`;
 
@@ -445,8 +490,22 @@ function toast(msg) {
 (function randomTool() {
   const inputs = Array.from(document.querySelectorAll('#randomInputs input'));
   const btn = document.getElementById('randomGo');
+  const resetBtn = document.getElementById('randomReset');
   const result = document.getElementById('randomResult');
   if (!btn) return;
+
+  // Restore saved inputs
+  const saved = Array.isArray(toolsState.randomInputs) ? toolsState.randomInputs : [];
+  inputs.forEach((inp, i) => { if (typeof saved[i] === 'string') inp.value = saved[i]; });
+
+  // Save on any input change
+  inputs.forEach((inp, i) => {
+    inp.addEventListener('input', () => {
+      toolsState.randomInputs[i] = inp.value;
+      toolsSaveState(toolsState);
+    });
+  });
+
   btn.addEventListener('click', () => {
     const options = inputs.map((i) => i.value.trim()).filter(Boolean);
     if (options.length === 0) {
@@ -468,8 +527,18 @@ function toast(msg) {
       }
     }, 60);
   });
-})();
 
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      inputs.forEach((inp) => { inp.value = ''; });
+      toolsState.randomInputs = ['', '', '', '', '', ''];
+      toolsSaveState(toolsState);
+      result.classList.add('empty');
+      result.innerHTML = '<span class="random-result-placeholder">已重置</span>';
+      toast('已重置');
+    });
+  }
+})();
 // ============================================================
 // JSON formatter
 // ============================================================
@@ -573,3 +642,31 @@ function toast(msg) {
     dateOut.textContent = Math.floor(d.getTime() / 1000).toString() + ' 秒\n' + d.getTime() + ' 毫秒';
   });
 })();
+
+// ================================================
+// Init: load persisted state, then re-render affected UI
+// ================================================
+toolsLoadState().then((state) => {
+  toolsState = { ...toolsState, ...state };
+  // Re-render calculator history
+  const historyList = document.getElementById('calcHistoryList');
+  if (historyList && Array.isArray(toolsState.calcHistory)) {
+    if (toolsState.calcHistory.length > 0) {
+      historyList.innerHTML = toolsState.calcHistory.map((h, i) =>
+        `<li class="calc-history-item" data-idx="${i}" tabindex="0"><span class="expr">${String(h.expr).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))} =</span><span class="result">${String(h.result).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))}</span></li>`
+      ).join('');
+      historyList.querySelectorAll('.calc-history-item').forEach((el) => {
+        el.addEventListener('click', () => {
+          const idx = parseInt(el.dataset.idx, 10);
+          const display = document.getElementById('calcDisplay');
+          const h = toolsState.calcHistory[idx];
+          if (h && display) {
+            display.value = h.result;
+            // Trigger calculator state reset
+            window.dispatchEvent(new Event('focus'));
+          }
+        });
+      });
+    }
+  }
+});

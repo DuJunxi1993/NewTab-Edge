@@ -337,6 +337,7 @@ searchBtn.addEventListener('click', performSearch);
 settingsBtn.addEventListener('click', () => {
   settingsPanel.classList.add('open');
   settingsPanel.setAttribute('aria-hidden', 'false');
+  document.getElementById('settingsBackdrop')?.classList.add('open');
 });
 
 closeSettingsBtn.addEventListener('click', closeSettings);
@@ -354,6 +355,7 @@ document.addEventListener('keydown', (e) => {
 function closeSettings() {
   settingsPanel.classList.remove('open');
   settingsPanel.setAttribute('aria-hidden', 'true');
+  document.getElementById('settingsBackdrop')?.classList.remove('open');
 }
 
 // ---------- Reset ----------
@@ -403,6 +405,7 @@ function persist() {
   function close() {
     overlay.classList.remove('active');
     overlay.setAttribute('aria-hidden', 'true');
+    document.getElementById('toolsBackdrop')?.classList.remove('open');
     document.documentElement.classList.remove('fullscreen-clock-active');
   }
 
