@@ -27,6 +27,10 @@ const ENGINES = {
     label: 'GITHUB',
     url: (q) => `https://github.com/search?q=${encodeURIComponent(q)}`,
   },
+  wkinfo: {
+    label: '威科',
+    url: (q) => `https://law.wkinfo.com.cn/legislation/list?simple=${encodeURIComponent(q)}`,
+  },
 };
 
 // ---------- State ----------
@@ -37,6 +41,7 @@ const DEFAULT_STATE = {
   saturation: 100,
   engine: 'baidu',
   themeMode: 'auto',  // 'auto' | 'light' | 'dark'
+  customTitle: '',
 };
 
 let state = { ...DEFAULT_STATE };
@@ -395,8 +400,58 @@ async function init() {
   searchInput.focus();
   bindThemeListener();
   bindThemeControls();
+  bindTitleInput();
+  document.getElementById('toolsBtn')?.addEventListener('click', openToolsPage);
 }
 
+function countChineseChars(s) {
+  // Count CJK ideographs (CJK Unified Ideographs blocks)
+  const m = s.match(/[\u3400-\u9FFF]/g);
+  return m ? m.length : 0;
+}
+
+function applyCustomTitle() {
+  const raw = (state.customTitle || '').trim();
+  const cn = countChineseChars(raw);
+  const total = raw.length;
+  // Rule: if any Chinese, cap at 7 CN (and total <= 14 to match input maxlength)
+  // Otherwise cap at 14 total chars
+  let valid = true;
+  let reason = '';
+  if (cn > 0 && cn > 7) { valid = false; reason = '中文最多 7 个汉字'; }
+  else if (cn === 0 && total > 14) { valid = false; reason = '英文 / 数字最多 14 字符'; }
+  const finalTitle = valid ? raw : '';
+  document.title = finalTitle || 'NewTab';
+  // Show feedback
+  const counter = document.getElementById('titleCount');
+  if (counter) {
+    counter.textContent = `${total} / ${cn > 0 ? '7 中' : '14 英'}`;
+    counter.style.color = valid ? '' : 'var(--danger)';
+  }
+  const input = document.getElementById('customTitle');
+  if (input) {
+    const hint = input.nextElementSibling;
+    if (hint) hint.textContent = valid ? '英文 / 数字 ≤ 14 字符 · 中文 ≤ 7 汉字' : reason;
+    input.style.borderColor = valid ? '' : 'var(--danger)';
+  }
+}
+
+function bindTitleInput() {
+  const input = document.getElementById('customTitle');
+  if (!input) return;
+  input.addEventListener('input', () => {
+    state.customTitle = input.value;
+    applyCustomTitle();
+    persist();
+  });
+  // Initialize from state
+  input.value = state.customTitle || '';
+  applyCustomTitle();
+}
+
+function openToolsPage() {
+  window.location.href = 'tools.html';
+}
 function applyTheme() {
   const mode = state.themeMode || 'auto';
   const html = document.documentElement;
@@ -439,7 +494,6 @@ function bindThemeListener() {
 }
 
 init();
-
 
 
 

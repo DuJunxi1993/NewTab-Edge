@@ -54,6 +54,9 @@
         <button type="button" class="tab tab-github" data-engine="github" role="tab">
           <span class="tab-dot"></span>GitHub
         </button>
+        <button type='button' class='tab tab-wkinfo' data-engine='wkinfo' role='tab'>
+          <span class='tab-dot'></span>威科
+        </button>
         <span class="tab-glider" id="tabGlider"></span>
       </div>
       <div class="search-row">
@@ -83,7 +86,13 @@
   <footer class="hud-bottom">
     <div class="hud-corner hud-bl"></div>
     <div class="hud-corner hud-br"></div>
-    <div class="hud-footer-text">NewTab · v1.0.0</div>
+    <button class="hud-footer-btn" id="toolsBtn" type="button">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 7h18M3 12h18M3 17h18" />
+      </svg>
+      <span>Tools</span>
+      <span class="hud-footer-version">v1.0.0</span>
+    </button>
   </footer>
 
   <!-- Settings Panel -->
@@ -112,7 +121,17 @@
           </div>
         </div>
 
-        <!-- Source picker -->
+        
+        <!-- Custom title -->
+        <div class="setting-group">
+          <div class="slider-row">
+            <label class="setting-label">TITLE // 标签页标题</label>
+            <span class="slider-value" id="titleCount">0 / 14</span>
+          </div>
+          <input type="text" id="customTitle" class="cyber-input" maxlength="14" placeholder="留空使用默认标题" />
+          <div class="hint">英文 / 数字 ≤ 14 字符 · 中文 ≤ 7 汉字</div>
+        </div>
+<!-- Source picker -->
         <div class="setting-group">
           <label class="setting-label">SOURCE // 壁纸来源</label>
           <div class="source-tabs">
