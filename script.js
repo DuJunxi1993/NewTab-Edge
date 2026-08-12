@@ -420,8 +420,15 @@ function applyCustomTitle() {
   let reason = '';
   if (cn > 0 && cn > 7) { valid = false; reason = '中文最多 7 个汉字'; }
   else if (cn === 0 && total > 14) { valid = false; reason = '英文 / 数字最多 14 字符'; }
-  const finalTitle = valid ? raw : '';
-  document.title = finalTitle || 'NewTab';
+  // Use custom text if valid AND non-empty; otherwise default to NETRUNNER
+  const finalTitle = (valid && raw) ? raw : 'NETRUNNER';
+  // Update browser tab title
+  document.title = (raw && valid) ? (finalTitle + ' - NewTab') : 'NewTab';
+
+  // Update visible <h1 class=.title.>NETRUNNER</h1>
+  const titleEl = document.querySelector('.title');
+  if (titleEl) titleEl.textContent = finalTitle;
+
   // Show feedback
   const counter = document.getElementById('titleCount');
   if (counter) {

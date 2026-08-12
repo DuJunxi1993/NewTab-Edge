@@ -25,6 +25,27 @@
   read().then((state) => apply(state.themeMode || 'auto'));
 })();
 
+// ---------- Wallpaper sync (match main page background) ----------
+(function syncWallpaper() {
+  // The main page default wallpaper is edge-solid (--edge-solid-color).
+  // Theme-aware: #f3f3f3 in light, #2c2c2c in dark.
+  // We read the CSS variable directly so dark mode switching stays in sync.
+  const wp = document.getElementById('wallpaper');
+  if (!wp) return;
+
+  function apply() {
+    const color = getComputedStyle(document.documentElement).getPropertyValue('--edge-solid-color').trim();
+    if (!color) return;
+    wp.style.backgroundImage = 'none';
+    wp.style.backgroundColor = color;
+  }
+  apply();
+  // Re-apply when theme changes (theme-toggle button)
+  document.getElementById('toolsThemeBtn')?.addEventListener('click', () => {
+    setTimeout(apply, 0);
+  });
+})();
+
 // ---------- Toast ----------
 function toast(msg) {
   const t = document.getElementById('toast');
