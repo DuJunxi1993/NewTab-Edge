@@ -1,100 +1,81 @@
 /* ================================================
-   Tools Page — WinUI 3 / Fluent Design
+   Tools Side Panel — Controller
+   Lives inside newtab.html; theme is inherited from
+   <html class="theme-..."> (set by main page applyTheme).
    ================================================ */
 
-// ---------- Theme sync ----------
-(function syncTheme() {
-  function read() {
-    return new Promise((resolve) => {
-      try {
-        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-          chrome.storage.local.get('state', (s) => resolve(s.state || {}));
-        } else {
-          const raw = localStorage.getItem('newtab_state');
-          resolve(raw ? JSON.parse(raw) : {});
-        }
-      } catch (e) { resolve({}); }
-    });
+// ---------- Panel open / close ----------
+(function panelController() {
+  const panel = document.getElementById('toolsPanel');
+  const backdrop = document.getElementById('toolsBackdrop');
+  const closeBtn = document.getElementById('toolsSheetClose');
+  if (!panel) return;
+
+  function open() {
+    panel.classList.add('open');
+    panel.setAttribute('aria-hidden', 'false');
   }
-  function apply(mode) {
-    const html = document.documentElement;
-    html.classList.remove('theme-dark', 'theme-light');
-    if (mode === 'dark') html.classList.add('theme-dark');
-    else if (mode === 'light') html.classList.add('theme-light');
+  function close() {
+    panel.classList.remove('open');
+    panel.setAttribute('aria-hidden', 'true');
   }
-  read().then((state) => apply(state.themeMode || 'auto'));
+  // Expose for main page (script.js) to call
+  window.openToolsPanel = open;
+  window.closeToolsPanel = close;
+
+  // Footer Tools button now opens the panel
+  const toolsBtn = document.getElementById('toolsBtn');
+  if (toolsBtn) {
+    // Defuse any older handlers that navigated to tools.html
+    const clone = toolsBtn.cloneNode(true);
+    toolsBtn.parentNode.replaceChild(clone, toolsBtn);
+    clone.addEventListener('click', open);
+  }
+
+  // Click backdrop or close button = close
+  backdrop.addEventListener('click', close);
+  if (closeBtn) closeBtn.addEventListener('click', close);
+
+  // ESC closes the panel when open
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && panel.classList.contains('open')) close();
+  });
 })();
 
-// ---------- Wallpaper sync (match main page background) ----------
-(function syncWallpaper() {
-  // The main page default wallpaper is edge-solid (--edge-solid-color).
-  // Theme-aware: #f3f3f3 in light, #2c2c2c in dark.
-  // We read the CSS variable directly so dark mode switching stays in sync.
-  const wp = document.getElementById('wallpaper');
-  if (!wp) return;
+// ---------- Tab switching ----------
+(function tabSwitcher() {
+  const tabs = document.querySelectorAll('.tools-sheet-tab');
+  const panels = document.querySelectorAll('.tool-panel');
+  if (!tabs.length) return;
 
-  function apply() {
-    const color = getComputedStyle(document.documentElement).getPropertyValue('--edge-solid-color').trim();
-    if (!color) return;
-    wp.style.backgroundImage = 'none';
-    wp.style.backgroundColor = color;
-  }
-  apply();
-  // Re-apply when theme changes (theme-toggle button)
-  document.getElementById('toolsThemeBtn')?.addEventListener('click', () => {
-    setTimeout(apply, 0);
+  tabs.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.tool;
+      tabs.forEach((b) => b.classList.toggle('active', b === btn));
+      panels.forEach((p) => p.classList.toggle('active', p.dataset.panel === target));
+    });
   });
 })();
 
 // ---------- Toast ----------
 function toast(msg) {
-  const t = document.getElementById('toast');
-  if (!t) return;
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.className = 'toast';
+    t.setAttribute('role', 'status');
+    t.setAttribute('aria-live', 'polite');
+    document.body.appendChild(t);
+  }
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toast._timer);
   toast._timer = setTimeout(() => t.classList.remove('show'), 1800);
 }
 
-// ---------- Sidebar navigation ----------
-document.querySelectorAll('.tool-nav').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const target = btn.dataset.tool;
-    document.querySelectorAll('.tool-nav').forEach((b) => {
-      const isActive = b === btn;
-      b.classList.toggle('active', isActive);
-    });
-    document.querySelectorAll('.tool-panel').forEach((p) => p.classList.toggle('active', p.dataset.panel === target));
-  });
-});
-
-// ---------- Theme toggle button ----------
-const themeBtn = document.getElementById('toolsThemeBtn');
-if (themeBtn) {
-  themeBtn.addEventListener('click', () => {
-    const html = document.documentElement;
-    const isDark = html.classList.contains('theme-dark');
-    html.classList.remove('theme-dark', 'theme-light');
-    if (isDark) html.classList.add('theme-light');
-    else html.classList.add('theme-dark');
-    const mode = isDark ? 'light' : 'dark';
-    try {
-      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-        chrome.storage.local.get('state', (s) => {
-          chrome.storage.local.set({ state: { ...(s.state || {}), themeMode: mode } });
-        });
-      } else {
-        const raw = localStorage.getItem('newtab_state');
-        const data = raw ? JSON.parse(raw) : {};
-        data.themeMode = mode;
-        localStorage.setItem('newtab_state', JSON.stringify(data));
-      }
-    } catch (e) { /* ignore */ }
-  });
-}
-
 // ============================================================
-// Calculator (with history)
+// Calculator (with history, max 6)
 // ============================================================
 (function calculator() {
   const display = document.getElementById('calcDisplay');
@@ -106,8 +87,9 @@ if (themeBtn) {
   let prev = null;
   let op = null;
   let justEvaluated = false;
-  let exprBuf = ''; // human-readable expression
+  let exprBuf = '';
   let history = [];
+  const HISTORY_MAX = 6;
 
   function setDisplay(v) {
     let s = String(v);
@@ -118,9 +100,13 @@ if (themeBtn) {
     display.value = s;
   }
 
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  }
+
   function pushHistory(expr, result) {
     history.unshift({ expr, result });
-    if (history.length > 5) history = history.slice(0, 5);
+    if (history.length > HISTORY_MAX) history = history.slice(0, HISTORY_MAX);
     renderHistory();
   }
 
@@ -145,18 +131,11 @@ if (themeBtn) {
     });
   }
 
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  }
-
   function applyNum(n) {
     if (justEvaluated) { current = '0'; exprBuf = ''; justEvaluated = false; }
     if (current === '0' && n !== '.') current = n;
     else if (n === '.' && current.includes('.')) return;
     else current = current + n;
-    if (exprBuf && /[+\-×÷]$/.test(exprBuf)) exprBuf += n;
-    else if (exprBuf === '' || justEvaluated) exprBuf = (justEvaluated ? '' : exprBuf) + n;
-    else exprBuf += n;
     setDisplay(current);
   }
 
@@ -165,12 +144,10 @@ if (themeBtn) {
     if (prev !== null && op !== null && !justEvaluated) {
       const result = compute(prev, current, op);
       prev = String(result);
-      exprBuf = String(result) + ' ' + opSym + ' ';
       setDisplay(prev);
       current = String(result);
     } else {
       prev = current;
-      exprBuf = (exprBuf || current) + ' ' + opSym + ' ';
     }
     op = o;
     justEvaluated = false;
@@ -192,28 +169,22 @@ if (themeBtn) {
     current = '0'; prev = null; op = null; justEvaluated = false; exprBuf = '';
     setDisplay(current);
   }
-
   function sign() {
     if (current !== '0') {
       current = current.startsWith('-') ? current.slice(1) : '-' + current;
       setDisplay(current);
     }
   }
-
   function percent() {
     const n = parseFloat(current) / 100;
     current = String(n);
     setDisplay(current);
-    exprBuf = (exprBuf || '').replace(/[\d.]+$/, String(n));
   }
-
   function dot() {
     if (justEvaluated) { current = '0'; exprBuf = ''; justEvaluated = false; }
     if (!current.includes('.')) current += '.';
-    if (!exprBuf.endsWith('.')) exprBuf += '.';
     setDisplay(current);
   }
-
   function equals() {
     if (prev === null || op === null) return;
     const a = prev, b = current, o = op;
@@ -225,7 +196,6 @@ if (themeBtn) {
     current = finalResult;
     prev = null;
     op = null;
-    exprBuf = finalResult;
     justEvaluated = true;
   }
 
@@ -247,7 +217,7 @@ if (themeBtn) {
   if (historyClear) historyClear.addEventListener('click', () => { history = []; renderHistory(); });
 
   document.addEventListener('keydown', (e) => {
-    if (!document.querySelector('[data-panel="calculator"].active')) return;
+    if (!document.querySelector('.tool-panel[data-panel="calculator"].active')) return;
     if (e.key >= '0' && e.key <= '9') applyNum(e.key);
     else if (e.key === '.') dot();
     else if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') applyOp(e.key);
@@ -270,7 +240,6 @@ if (themeBtn) {
     hex: document.getElementById('baseHex'),
   };
   if (!fields.dec) return;
-
   function updateFrom(source, value) {
     const v = (value || '').trim().replace(/\s+/g, '');
     if (!v) {
@@ -307,15 +276,11 @@ if (themeBtn) {
       const v = input.value;
       const action = btn.dataset.enc;
       try {
-        if (action === 'base64-encode') {
-          output.value = btoa(unescape(encodeURIComponent(v)));
-        } else if (action === 'base64-decode') {
-          output.value = decodeURIComponent(escape(atob(v)));
-        } else if (action === 'url-encode') {
-          output.value = encodeURIComponent(v);
-        } else if (action === 'url-decode') {
-          output.value = decodeURIComponent(v);
-        } else if (action === 'unicode-escape') {
+        if (action === 'base64-encode') output.value = btoa(unescape(encodeURIComponent(v)));
+        else if (action === 'base64-decode') output.value = decodeURIComponent(escape(atob(v)));
+        else if (action === 'url-encode') output.value = encodeURIComponent(v);
+        else if (action === 'url-decode') output.value = decodeURIComponent(v);
+        else if (action === 'unicode-escape') {
           let out = '';
           for (const c of v) {
             const code = c.codePointAt(0);
@@ -347,14 +312,11 @@ if (themeBtn) {
     const digits = ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖'];
     const units = ['', '拾', '佰', '仟'];
     const bigUnits = ['', '万', '亿', '万亿'];
-
     const intPart = Math.floor(num);
     const decPart = Math.round((num - intPart) * 100);
-
     function intToCn(n) {
       if (n === 0) return '';
-      let s = '';
-      let group = 0;
+      let s = ''; let group = 0;
       while (n > 0) {
         const chunk = n % 10000;
         if (chunk !== 0) {
@@ -376,7 +338,6 @@ if (themeBtn) {
       }
       return s;
     }
-
     let result = sign + intToCn(intPart) + '元';
     if (decPart === 0) result += '整';
     else {
@@ -411,13 +372,11 @@ if (themeBtn) {
   const info = document.getElementById('colorInfo');
   if (!picker) return;
 
-  // Win 11 / Fluent design palette (24 colors, 8x3 grid)
   const basePalette = [
     '#000000', '#1f2937', '#4b5563', '#9ca3af', '#ffffff', '#f3f4f6', '#dbeafe', '#fee2e2',
     '#1e3a8a', '#0067c0', '#4cc2ff', '#16a34a', '#dc2626', '#f59e0b', '#facc15', '#fb923c',
     '#8b5cf6', '#ec4899', '#f43f5e', '#f8f4f1', '#fef3c7', '#dcfce7', '#0f766e', '#1f2937',
   ];
-
   paletteCount.textContent = `${basePalette.length} colors`;
 
   basePalette.forEach((hex) => {
@@ -431,11 +390,7 @@ if (themeBtn) {
 
   function hexToRgb(hex) {
     const m = hex.replace('#', '');
-    return {
-      r: parseInt(m.substr(0, 2), 16),
-      g: parseInt(m.substr(2, 2), 16),
-      b: parseInt(m.substr(4, 2), 16),
-    };
+    return { r: parseInt(m.substr(0, 2), 16), g: parseInt(m.substr(2, 2), 16), b: parseInt(m.substr(4, 2), 16) };
   }
   function rgbToHsl(r, g, b) {
     r /= 255; g /= 255; b /= 255;
@@ -486,7 +441,6 @@ if (themeBtn) {
     updateFromHex(v);
   });
   [colorR, colorG, colorB].forEach((el) => el.addEventListener('input', updateFromRgb));
-
   updateFromHex(picker.value);
 })();
 
@@ -498,7 +452,6 @@ if (themeBtn) {
   const btn = document.getElementById('randomGo');
   const result = document.getElementById('randomResult');
   if (!btn) return;
-
   btn.addEventListener('click', () => {
     const options = inputs.map((i) => i.value.trim()).filter(Boolean);
     if (options.length === 0) {
@@ -532,13 +485,10 @@ if (themeBtn) {
   const formatBtn = document.getElementById('jsonFormat');
   const minifyBtn = document.getElementById('jsonMinify');
   if (!formatBtn) return;
-
   function process(mode) {
     try {
       const obj = JSON.parse(input.value);
-      output.value = mode === 'minify'
-        ? JSON.stringify(obj)
-        : JSON.stringify(obj, null, 2);
+      output.value = mode === 'minify' ? JSON.stringify(obj) : JSON.stringify(obj, null, 2);
       status.textContent = '✓ 有效 JSON';
       status.className = 'status-line success';
     } catch (e) {
@@ -560,7 +510,6 @@ if (themeBtn) {
   const gen = document.getElementById('uuidGen');
   const copy = document.getElementById('uuidCopy');
   if (!gen) return;
-
   function uuid() {
     if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -569,7 +518,6 @@ if (themeBtn) {
       return v.toString(16);
     });
   }
-
   gen.addEventListener('click', () => {
     let n = parseInt(count.value, 10) || 1;
     n = Math.max(1, Math.min(20, n));
@@ -578,7 +526,6 @@ if (themeBtn) {
     for (let i = 0; i < n; i++) ids.push(uuid());
     output.value = ids.join('\n');
   });
-
   if (copy) {
     copy.addEventListener('click', async () => {
       try {
@@ -590,7 +537,6 @@ if (themeBtn) {
       }
     });
   }
-
   gen.click();
 })();
 
@@ -606,7 +552,6 @@ if (themeBtn) {
   const dateInput = document.getElementById('tsDateInput');
   const dateOut = document.getElementById('tsToUnixOut');
   if (!unixEl) return;
-
   function tick() {
     const now = new Date();
     unixEl.textContent = Math.floor(now.getTime() / 1000).toString();
@@ -615,7 +560,6 @@ if (themeBtn) {
   }
   tick();
   setInterval(tick, 1000);
-
   document.getElementById('tsToDate').addEventListener('click', () => {
     const v = tsInput.value.trim();
     if (!v) { tsOut.textContent = ''; return; }
@@ -625,7 +569,6 @@ if (themeBtn) {
     const d = new Date(n);
     tsOut.textContent = d.toLocaleString('zh-CN', { hour12: false }) + '\n' + d.toISOString();
   });
-
   document.getElementById('tsToUnix').addEventListener('click', () => {
     const v = dateInput.value.trim();
     if (!v) { dateOut.textContent = ''; return; }

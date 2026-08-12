@@ -401,7 +401,7 @@ async function init() {
   bindThemeListener();
   bindThemeControls();
   bindTitleInput();
-  document.getElementById('toolsBtn')?.addEventListener('click', openToolsPage);
+  document.getElementById('toolsBtn')?.addEventListener('click', () => { if (window.openToolsPanel) window.openToolsPanel(); });
 }
 
 function countChineseChars(s) {
@@ -454,10 +454,6 @@ function bindTitleInput() {
   // Initialize from state
   input.value = state.customTitle || '';
   applyCustomTitle();
-}
-
-function openToolsPage() {
-  window.location.href = 'tools.html';
 }
 function applyTheme() {
   const mode = state.themeMode || 'auto';
