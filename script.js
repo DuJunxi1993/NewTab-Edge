@@ -117,7 +117,11 @@ function tickClock() {
   const hh = String(d.getHours()).padStart(2, '0');
   const mm = String(d.getMinutes()).padStart(2, '0');
   const ss = String(d.getSeconds()).padStart(2, '0');
-  hudClock.textContent = `${hh}:${mm}:${ss}`;
+  if (hudClock) hudClock.textContent = `${hh}:${mm}:${ss}`;
+  const fsTime = document.getElementById('fsClockTime');
+  if (fsTime) fsTime.textContent = `${hh}:${mm}:${ss}`;
+  const fsDate = document.getElementById('fsClockDate');
+  if (fsDate) fsDate.textContent = d.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
 }
 setInterval(tickClock, 1000);
 tickClock();
@@ -385,6 +389,40 @@ function persist() {
   }, 250);
 }
 
+// ---------- Fullscreen clock (click time -> big clock, click anywhere to exit) ----------
+(function fullscreenClock() {
+  const overlay = document.getElementById('fullscreenClock');
+  const trigger = document.getElementById('hudClockBtn');
+  if (!overlay || !trigger) return;
+
+  function open() {
+    overlay.classList.add('active');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.documentElement.classList.add('fullscreen-clock-active');
+  }
+  function close() {
+    overlay.classList.remove('active');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.documentElement.classList.remove('fullscreen-clock-active');
+  }
+
+  trigger.addEventListener('click', open);
+  overlay.addEventListener('click', close);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay.classList.contains('active')) close();
+  });
+})();
+
+// ---------- Settings panel: click backdrop to close (consistent with tools panel) ----------
+(function settingsBackdropClose() {
+  const backdrop = document.getElementById('settingsBackdrop');
+  const panel = document.getElementById('settingsPanel');
+  if (!backdrop || !panel) return;
+  backdrop.addEventListener('click', () => {
+    panel.classList.remove('open');
+    panel.setAttribute('aria-hidden', 'true');
+  });
+})();
 // ---------- Init ----------
 async function init() {
   const { state: saved } = await storage.get('state');

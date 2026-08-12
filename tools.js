@@ -24,13 +24,8 @@
   window.closeToolsPanel = close;
 
   // Footer Tools button now opens the panel
-  const toolsBtn = document.getElementById('toolsBtn');
-  if (toolsBtn) {
-    // Defuse any older handlers that navigated to tools.html
-    const clone = toolsBtn.cloneNode(true);
-    toolsBtn.parentNode.replaceChild(clone, toolsBtn);
-    clone.addEventListener('click', open);
-  }
+  const toolsBtn = document.getElementById('toolsBtnTop');
+  if (toolsBtn) toolsBtn.addEventListener('click', open);
 
   // Click backdrop or close button = close
   backdrop.addEventListener('click', close);

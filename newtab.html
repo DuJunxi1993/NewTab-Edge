@@ -19,14 +19,13 @@
 
   <!-- Top HUD bar -->
   <header class="hud-top">
-    <div class="hud-corner hud-tl"></div>
-    <div class="hud-corner hud-tr"></div>
-    <div class="hud-status">
-      <span class="hud-dot"></span>
-      <span id="hudClock" class="hud-clock">00:00:00</span>
-    </div>
-    <button class="hud-btn" id="settingsBtn" title="Settings" aria-label="Settings">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+    <button class="hud-btn hud-btn-circular" id="toolsBtnTop" type="button" title="Tools" aria-label="Tools">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.93a2.12 2.12 0 0 1-3-3l6.92-6.93a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+      </svg>
+    </button>
+    <button class="hud-btn hud-btn-circular" id="settingsBtn" type="button" title="Settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <circle cx="12" cy="12" r="3" />
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
       </svg>
@@ -84,19 +83,22 @@
 
   <!-- Bottom HUD -->
   <footer class="hud-bottom">
-    <div class="hud-corner hud-bl"></div>
-    <div class="hud-corner hud-br"></div>
-    <button class="hud-footer-btn" id="toolsBtn" type="button">
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 7h18M3 12h18M3 17h18" />
-      </svg>
-      <span>Tools</span>
-      <span class="hud-footer-version">v1.0.0</span>
+    <button class="hud-time-btn" id="hudClockBtn" type="button" title="点击进入全屏时钟" aria-label="Toggle fullscreen clock">
+      <span class="hud-time-dot" aria-hidden="true"></span>
+      <span id="hudClock" class="hud-clock">00:00:00</span>
     </button>
   </footer>
 
+  <!-- Fullscreen clock overlay (click anywhere to exit) -->
+  <div class="fullscreen-clock" id="fullscreenClock" role="button" tabindex="0" aria-label="Click to exit fullscreen clock">
+    <div class="fs-clock-time" id="fsClockTime">00:00:00</div>
+    <div class="fs-clock-date" id="fsClockDate">--</div>
+    <div class="fs-clock-hint">点击任意位置退出</div>
+  </div>
+
   <!-- Settings Panel -->
   <aside class="settings-panel" id="settingsPanel" aria-hidden="true">
+    <div class="settings-backdrop" id="settingsBackdrop"></div>
     <div class="settings-card">
       <div class="settings-header">
         <div class="settings-title">

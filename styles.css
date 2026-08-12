@@ -452,6 +452,17 @@ body::before {
 }
 
 /* ===== Settings panel (Edge flyout) ===== */
+.settings-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.32);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+body.theme-dark .settings-backdrop { background: rgba(0, 0, 0, 0.48); }
+.settings-panel.open .settings-backdrop { opacity: 1; }
 .settings-panel {
   position: fixed;
   top: 0;
@@ -876,10 +887,8 @@ html.theme-dark {
 
 /* ================================================
    Tools Slide-in Panel (Win 11 style side panel)
-   Shown when user clicks the footer Tools button on newtab.
-   Theme is inherited from <html class="theme-..."> via the same
-   CSS variables used by the rest of the page, so light/dark sync
-   is automatic.
+   Slides in from the LEFT (mirrored from settings panel).
+   Click backdrop to close, ESC to close, or X button.
    ================================================ */
 
 .tools-panel {
@@ -907,19 +916,20 @@ body.theme-dark .tools-backdrop { background: rgba(0, 0, 0, 0.48); }
 .tools-sheet {
   position: absolute;
   top: 0;
-  right: 0;
+  left: 0;
   bottom: 0;
   width: 760px;
   max-width: 94vw;
   background: var(--surface-solid);
-  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  transform: translateX(100%);
+  transform: translateX(-100%);
   transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.12);
+  box-shadow: 12px 0 40px rgba(0, 0, 0, 0.12);
 }
 .tools-panel.open .tools-sheet { transform: translateX(0); }
+
 
 .tools-sheet-header {
   display: flex;
@@ -1371,3 +1381,135 @@ body.theme-dark .tools-sheet-body .fluent-input[readonly] { background: rgba(255
 @media (max-width: 720px) {
   .tools-sheet { width: 100vw; max-width: 100vw; border-left: none; }
 }
+
+
+/* ================================================
+   HUD buttons: circular style for top-bar corners
+   ================================================ */
+
+.hud-btn-circular {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+}
+.hud-btn-circular:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.hud-btn-circular:active {
+  transform: scale(0.94);
+  background: var(--surface-pressed);
+}
+
+/* ================================================
+   Bottom time button (replaces old footer Tools button)
+   Click to enter fullscreen clock mode
+   ================================================ */
+
+.hud-time-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 13px "JetBrains Mono", ui-monospace, monospace;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  background: var(--surface);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--border);
+  padding: 7px 16px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.hud-time-btn:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.hud-time-btn:active {
+  background: var(--surface-pressed);
+  transform: scale(0.97);
+}
+.hud-time-dot {
+  width: 6px;
+  height: 6px;
+  background: #16a34a;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #16a34a;
+  animation: hudTimePulse 1.8s ease-in-out infinite;
+}
+@keyframes hudTimePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.7); }
+}
+
+/* ================================================
+   Fullscreen clock overlay
+   Click time -> big clock, click anywhere to exit
+   Hides all other UI while active
+   ================================================ */
+
+.fullscreen-clock {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-solid);
+  cursor: pointer;
+  user-select: none;
+  animation: fsClockFade 0.25s ease;
+}
+.fullscreen-clock.active {
+  display: flex;
+}
+@keyframes fsClockFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.fs-clock-time {
+  font: 200 160px "JetBrains Mono", ui-monospace, monospace;
+  font-weight: 200;
+  color: var(--text-primary);
+  letter-spacing: 6px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.fs-clock-date {
+  margin-top: 24px;
+  font: 500 16px "Inter", system-ui;
+  color: var(--text-tertiary);
+  letter-spacing: 1.5px;
+}
+.fs-clock-hint {
+  position: absolute;
+  bottom: 32px;
+  font: 400 12px "Inter", system-ui;
+  color: var(--text-tertiary);
+  letter-spacing: 1px;
+  opacity: 0.7;
+}
+
+/* When fullscreen clock is active, hide everything else */
+html.fullscreen-clock-active .hud-top,
+html.fullscreen-clock-active .hud-bottom,
+html.fullscreen-clock-active .stage,
+html.fullscreen-clock-active .wallpaper,
+html.fullscreen-clock-active .wallpaper-overlay,
+html.fullscreen-clock-active .scanlines,
+html.fullscreen-clock-active .vignette,
+html.fullscreen-clock-active .tools-panel,
+html.fullscreen-clock-active .settings-panel { display: none !important; }
