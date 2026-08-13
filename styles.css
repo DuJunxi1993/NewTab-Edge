@@ -514,7 +514,7 @@ body.theme-dark .settings-backdrop { background: rgba(0, 0, 0, 0.48); }
   gap: 8px;
 }
 
-.settings-bar { display: none; }
+
 
 .close-btn {
   background: transparent;
@@ -1477,23 +1477,24 @@ body.theme-dark .tools-sheet-body .fluent-input[readonly] { background: rgba(255
   position: fixed;
   inset: 0;
   z-index: 300;
-  display: none;
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background: var(--surface-solid);
   cursor: pointer;
   user-select: none;
-  animation: fsClockFade 0.25s ease;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.32s ease, visibility 0s linear 0.32s;
 }
 .fullscreen-clock.active {
-  display: flex;
-}
-@keyframes fsClockFade {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-.fs-clock-time {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.32s ease, visibility 0s linear 0s;
+}.fs-clock-time {
   font: 200 160px "JetBrains Mono", ui-monospace, monospace;
   font-weight: 200;
   color: var(--text-primary);
@@ -1526,3 +1527,5 @@ html.fullscreen-clock-active .scanlines,
 html.fullscreen-clock-active .vignette,
 html.fullscreen-clock-active .tools-panel,
 html.fullscreen-clock-active .settings-panel { display: none !important; }
+
+

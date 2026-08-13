@@ -76,11 +76,18 @@ let toolsState = { ...TOOLS_DEFAULT_STATE };
   backdrop.addEventListener('click', close);
   if (closeBtn) closeBtn.addEventListener('click', close);
 
+  // Backup: click anywhere on the document outside the panel and not
+  // on the tools button also closes the panel
+  document.addEventListener('click', (e) => {
+    if (!panel.classList.contains('open')) return;
+    if (panel.contains(e.target)) return;
+    if (e.target === toolsBtn || toolsBtn.contains(e.target)) return;
+    close();
+  });
   // ESC closes the panel when open
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && panel.classList.contains('open')) close();
-  });
-})();
+  });})();
 
 // ---------- Tab switching ----------
 (function tabSwitcher() {
@@ -670,3 +677,5 @@ toolsLoadState().then((state) => {
     }
   }
 });
+
+
