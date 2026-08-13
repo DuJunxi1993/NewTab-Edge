@@ -1,3 +1,53 @@
+
+/* ================================================
+   Settings panel — self-contained IIFE at the top
+   of the file so the click handler is attached as soon
+   as script.js loads (before any other code that might
+   throw and prevent the rest from running).
+   ================================================ */
+(function setupSettingsPanel() {
+  const btn = document.getElementById('settingsBtn');
+  const panel = document.getElementById('settingsPanel');
+  const backdrop = document.getElementById('settingsBackdrop');
+  const closeBtn = document.getElementById('closeSettings');
+  if (!btn || !panel || !backdrop) {
+    console.warn('[NewTab] settings panel elements missing:', { btn: !!btn, panel: !!panel, backdrop: !!backdrop });
+    return;
+  }
+  function open() {
+    panel.classList.add('open');
+    panel.setAttribute('aria-hidden', 'false');
+    backdrop.classList.add('open');
+  }
+  function close() {
+    panel.classList.remove('open');
+    panel.setAttribute('aria-hidden', 'true');
+    backdrop.classList.remove('open');
+  }
+  btn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    open();
+  });
+  if (closeBtn) closeBtn.addEventListener('click', close);
+  backdrop.addEventListener('click', close);
+  // Backup: click anywhere on the document outside the panel and not
+  // on the settings button itself also closes the panel
+  document.addEventListener('click', function (e) {
+    if (!panel.classList.contains('open')) return;
+    if (e.target === btn || btn.contains(e.target)) return;
+    if (panel.contains(e.target)) return;
+    close();
+  });
+  // Escape to close
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && panel.classList.contains('open')) close();
+  });
+  // Expose for cross-script calls
+  window.openSettingsPanel = open;
+  window.closeSettingsPanel = close;
+})();
+
+
 /* ================================================
    Cyberpunk NewTab — Controller
    ================================================ */
