@@ -360,6 +360,16 @@ function closeSettings() {
   document.getElementById('settingsBackdrop')?.classList.remove('open');
 }
 
+// Robust click-outside-to-close for settings panel (catches clicks even
+// when the backdrop somehow doesn't receive them)
+document.addEventListener('click', (e) => {
+  if (!settingsPanel || !settingsPanel.classList.contains('open')) return;
+  if (e.target.closest('.settings-panel')) return; // click inside panel
+  if (e.target.closest('.settings-btn-container, .hud-btn-circular')) return; // click on the gear
+  if (e.target === settingsBtn) return;
+  closeSettings();
+});
+
 // ---------- Reset ----------
 resetBtn.addEventListener('click', () => {
   state = JSON.parse(JSON.stringify(DEFAULT_STATE));

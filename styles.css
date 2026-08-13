@@ -85,7 +85,7 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background: var(--bg-gradient);
+  background: transparent;
   z-index: -3;
 }
 
@@ -97,6 +97,7 @@ body::before {
   background-position: center;
   background-repeat: no-repeat;
   background-image: none;
+  background-color: var(--edge-solid-color, #f3f3f3);
   filter: blur(var(--blur)) brightness(var(--brightness)) saturate(var(--saturation));
   transform: scale(calc(1 + var(--blur) * 0.02));
   transition: filter 0.25s ease;
@@ -911,7 +912,7 @@ html.theme-dark {
 .tools-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 199;
+  z-index: 25;
   background: rgba(0, 0, 0, 0.35);
   opacity: 0;
   pointer-events: none;
