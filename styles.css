@@ -1529,3 +1529,12 @@ html.fullscreen-clock-active .tools-panel,
 html.fullscreen-clock-active .settings-panel { display: none !important; }
 
 
+
+
+/* Hide the wrong-panel button when the other panel is open.
+   The top-left wrench (tools) is hidden when settings is open, and
+   the top-right gear (settings) is hidden when tools is open. This
+   avoids the leftover icon showing as a confusing ">" or "X" on the
+   side opposite the active panel. */
+body.settings-open .hud-top #toolsBtnTop { display: none; }
+body.tools-open .hud-top #settingsBtn { display: none; }

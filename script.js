@@ -18,11 +18,13 @@
     panel.classList.add('open');
     panel.setAttribute('aria-hidden', 'false');
     backdrop.classList.add('open');
+    document.body.classList.add('settings-open');
   }
   function close() {
     panel.classList.remove('open');
     panel.setAttribute('aria-hidden', 'true');
     backdrop.classList.remove('open');
+    document.body.classList.remove('settings-open');
   }
   btn.addEventListener('click', function (e) {
     e.stopPropagation();
