@@ -334,13 +334,14 @@ searchForm.addEventListener('submit', performSearch);
 searchBtn.addEventListener('click', performSearch);
 
 // ---------- Settings panel ----------
-settingsBtn.addEventListener('click', () => {
+settingsBtn?.addEventListener('click', () => {
+  if (!settingsPanel) return;
   settingsPanel.classList.add('open');
   settingsPanel.setAttribute('aria-hidden', 'false');
   document.getElementById('settingsBackdrop')?.classList.add('open');
 });
 
-closeSettingsBtn.addEventListener('click', closeSettings);
+closeSettingsBtn?.addEventListener('click', closeSettings);
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && settingsPanel.classList.contains('open')) {
@@ -353,6 +354,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 function closeSettings() {
+  if (!settingsPanel) return;
   settingsPanel.classList.remove('open');
   settingsPanel.setAttribute('aria-hidden', 'true');
   document.getElementById('settingsBackdrop')?.classList.remove('open');
