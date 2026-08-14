@@ -94,6 +94,8 @@ const DEFAULT_STATE = {
   engine: 'baidu',
   themeMode: 'auto',  // 'auto' | 'light' | 'dark'
   customTitle: '',
+  rainbowMode: 'off',  // 'off' | 'vivid' | 'soft' | 'morandi'
+  aiSites: [],
 };
 
 let state = { ...DEFAULT_STATE };
@@ -145,7 +147,6 @@ const searchInput = $('#searchInput');
 const searchForm = $('#searchForm');
 const searchBtn = $('#searchBtn');
 const engineLabel = $('#engineLabel');
-const queryLabel = $('#queryLabel');
 const hudClock = $('#hudClock');
 const settingsBtn = $('#settingsBtn');
 const closeSettingsBtn = $('#closeSettings');
@@ -160,7 +161,7 @@ const toastEl = $('#toast');
 const urlGroup = $('#urlGroup');
 const uploadGroup = $('#uploadGroup');
 const builtinGroup = $('#builtinGroup');
-const sourceTabs = document.querySelectorAll('.src-tab');
+const sourceTabs = document.querySelectorAll('#settingsPanel .seg-btn[data-src]');
 const searchTabs = document.querySelectorAll('.tab');
 
 // ---------- Clock ----------
@@ -365,11 +366,6 @@ function setEngine(name) {
 
 searchTabs.forEach((t) => t.addEventListener('click', () => setEngine(t.dataset.engine)));
 
-searchInput.addEventListener('input', (e) => {
-  const q = e.target.value.trim();
-  queryLabel.textContent = `QUERY: ${q || 'NULL'}`;
-});
-
 function performSearch(e) {
   e.preventDefault();
   const q = searchInput.value.trim();
@@ -379,7 +375,7 @@ function performSearch(e) {
     return;
   }
   const engine = ENGINES[state.engine];
-  window.location.href = engine.url(q);
+  window.open(engine.url(q), '_blank', 'noopener');
 }
 
 searchForm.addEventListener('submit', performSearch);
@@ -388,6 +384,10 @@ searchBtn.addEventListener('click', performSearch);
 // ---------- Settings panel ----------
 settingsBtn?.addEventListener('click', () => {
   if (!settingsPanel) return;
+  // Mutual exclusion with the AI panel
+  document.getElementById('aiPanel')?.classList.remove('open');
+  document.getElementById('aiBackdrop')?.classList.remove('open');
+  document.body.classList.remove('ai-open');
   settingsPanel.classList.add('open');
   settingsPanel.setAttribute('aria-hidden', 'false');
   document.getElementById('settingsBackdrop')?.classList.add('open');
@@ -416,7 +416,7 @@ function closeSettings() {
 // when the backdrop somehow doesn't receive them)
 document.addEventListener('click', (e) => {
   if (!settingsPanel || !settingsPanel.classList.contains('open')) return;
-  if (e.target.closest('.settings-panel')) return; // click inside panel
+  if (e.target.closest('#settingsPanel')) return; // click inside panel
   if (e.target.closest('.settings-btn-container, .hud-btn-circular')) return; // click on the gear
   if (e.target === settingsBtn) return;
   closeSettings();
@@ -432,6 +432,8 @@ resetBtn.addEventListener('click', () => {
   renderBuiltinGrid();
   setEngine(state.engine);
   setSource('url');
+  applyTheme();
+  applyRainbow();
   persist();
   toast('Settings reset');
 });
@@ -495,6 +497,10 @@ async function init() {
   const { state: saved } = await storage.get('state');
   if (saved && typeof saved === 'object') {
     state = { ...DEFAULT_STATE, ...saved };
+    // Migrate legacy boolean rainbowMode (true->vivid, false->off)
+    if (state.rainbowMode === true) state.rainbowMode = 'vivid';
+    else if (state.rainbowMode === false || state.rainbowMode === undefined) state.rainbowMode = 'off';
+    else if (!RAINBOW_PALETTES[state.rainbowMode]) state.rainbowMode = 'off';
   }
   applyWallpaper();
   applyFilters();
@@ -502,12 +508,28 @@ async function init() {
   setEngine(state.engine);
   setSource('url');
   applyTheme();
+  applyRainbow();
   searchInput.focus();
   bindThemeListener();
   bindThemeControls();
+  bindRainbowControls();
   bindTitleInput();
-  document.getElementById('toolsBtn')?.addEventListener('click', () => { if (window.openToolsPanel) window.openToolsPanel(); });
+  // Defer to a macrotask: ai.js loads after this script, so the
+  // render function only exists once parsing of all scripts ends.
+  // (A 0ms timer can fire between external scripts, before ai.js is
+  // parsed — 250ms is the primary trigger; ai.js also self-checks
+  // __stateReady below, covering both orderings.)
+  window.__stateReady = true;
+  setTimeout(() => {
+    if (typeof window.renderAiPanel === 'function') renderAiPanel();
+  }, 250);
 }
+
+const RAINBOW_PALETTES = {
+  vivid:   ['#00e5ff', '#ff2e88', '#ffd60a', '#9dff3c', '#ff7a00', '#b26bff', '#00ff9d'],
+  soft:    ['#7fd4e6', '#ef9ec4', '#ecd98a', '#b8d9a1', '#e5b48f', '#b3a6df', '#8fdcbe'],
+  morandi: ['#8aa8b5', '#c2a0ac', '#c9b98f', '#a5b29a', '#c2a48c', '#a8a0bd', '#99b3a8'],
+};
 
 function countChineseChars(s) {
   // Count CJK ideographs (CJK Unified Ideographs blocks)
@@ -532,7 +554,22 @@ function applyCustomTitle() {
 
   // Update visible <h1 class=.title.>NETRUNNER</h1>
   const titleEl = document.querySelector('.title');
-  if (titleEl) titleEl.textContent = finalTitle;
+  if (titleEl) {
+    if (state.rainbowMode !== 'off') {
+      // Rainbow mode: one solid color per glyph (built via textContent
+      // chunks, so user input can never inject markup)
+      const colors = RAINBOW_PALETTES[state.rainbowMode] || RAINBOW_PALETTES.vivid;
+      titleEl.textContent = '';
+      [...finalTitle].forEach((ch, i) => {
+        const span = document.createElement('span');
+        span.textContent = ch;
+        span.style.color = colors[i % colors.length];
+        titleEl.appendChild(span);
+      });
+    } else {
+      titleEl.textContent = finalTitle;
+    }
+  }
 
   // Show feedback
   const counter = document.getElementById('titleCount');
@@ -584,6 +621,30 @@ function bindThemeControls() {
     });
   });
 }
+
+function applyRainbow() {
+  const mode = state.rainbowMode || 'off';
+  const html = document.documentElement;
+  if (mode === 'off') {
+    html.removeAttribute('data-rainbow');
+  } else {
+    html.setAttribute('data-rainbow', mode);
+  }
+  document.querySelectorAll('.rainbow-tab').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.rainbow === mode);
+  });
+  applyCustomTitle();
+}
+
+function bindRainbowControls() {
+  document.querySelectorAll('.rainbow-tab').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.rainbowMode = btn.dataset.rainbow;
+      applyRainbow();
+      persist();
+    });
+  });
+}
 function bindThemeListener() {
   const mq = window.matchMedia('(prefers-color-scheme: dark)');
   const handler = () => {
@@ -601,7 +662,7 @@ function bindThemeListener() {
   }
 }
 
-init();
+init().catch((e) => { window.__initFail = e.message; });
 
 
 

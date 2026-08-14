@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    :root {
+      --bg: #15151a;
+      --surface: #1d1d24;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #e8e8ee;
+      --text-dim: #9a9aa6;
+      --accent: #00d9ff;
+      --accent-dim: rgba(0, 217, 255, 0.12);
+      --ok: #2ee6a8;
+      --warn: #ff5d5d;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 260px;
+      font: 400 13px "Inter", "Segoe UI Variable", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 14px;
+    }
+    .head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .head .logo {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(0, 217, 255, 0.35);
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+    }
+    .head h1 {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .site {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+    }
+    .site .domain {
+      font: 500 11px "JetBrains Mono", ui-monospace, monospace;
+      color: var(--accent);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .site .title {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 3px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .btn {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font: 500 13px "Inter", system-ui, sans-serif;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .btn:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+    .status {
+      font-size: 12px;
+      margin-top: 10px;
+      min-height: 16px;
+      text-align: center;
+    }
+    .status.ok { color: var(--ok); }
+    .status.warn { color: var(--warn); }
+  </style>
+</head>
+<body>
+  <div class="head">
+    <span class="logo">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z" />
+      </svg>
+    </span>
+    <h1>AI HUB</h1>
+  </div>
+
+  <div class="site">
+    <div class="domain" id="siteDomain">—</div>
+    <div class="title" id="siteTitle">正在读取当前页面…</div>
+  </div>
+
+  <button class="btn" id="addBtn" disabled type="button">
+    ＋ 添加到 AI Hub
+  </button>
+  <div class="status" id="status"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

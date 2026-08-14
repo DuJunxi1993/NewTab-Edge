@@ -55,13 +55,19 @@ let toolsState = { ...TOOLS_DEFAULT_STATE };
   if (!panel) return;
 
   function open() {
+    // Mutual exclusion with the AI panel
+    document.getElementById('aiPanel')?.classList.remove('open');
+    document.getElementById('aiBackdrop')?.classList.remove('open');
+    document.body.classList.remove('ai-open');
     panel.classList.add('open');
     panel.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('tools-open');
     document.getElementById('toolsBackdrop')?.classList.add('open');
   }
   function close() {
     panel.classList.remove('open');
     panel.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('tools-open');
     document.getElementById('toolsBackdrop')?.classList.remove('open');
   }
   // Expose for main page (script.js) to call
@@ -91,7 +97,7 @@ let toolsState = { ...TOOLS_DEFAULT_STATE };
 
 // ---------- Tab switching ----------
 (function tabSwitcher() {
-  const tabs = document.querySelectorAll('.tools-sheet-tab');
+  const tabs = document.querySelectorAll('#toolsPanel .seg-btn');
   const panels = document.querySelectorAll('.tool-panel');
   if (!tabs.length) return;
 
@@ -103,23 +109,6 @@ let toolsState = { ...TOOLS_DEFAULT_STATE };
     });
   });
 })();
-
-// ---------- Toast ----------
-function toast(msg) {
-  let t = document.getElementById('toast');
-  if (!t) {
-    t = document.createElement('div');
-    t.id = 'toast';
-    t.className = 'toast';
-    t.setAttribute('role', 'status');
-    t.setAttribute('aria-live', 'polite');
-    document.body.appendChild(t);
-  }
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toast._timer);
-  toast._timer = setTimeout(() => t.classList.remove('show'), 1800);
-}
 
 // ============================================================
 // Calculator (with history, max 6)
@@ -146,6 +135,17 @@ function toast(msg) {
     }
     display.value = s;
   }
+
+  // Expose for the async state-restore path (bottom of file) so it can
+  // load a history entry into the calculator's internal state too.
+  window.setCalcDisplayValue = (v) => {
+    current = String(v);
+    prev = null;
+    op = null;
+    justEvaluated = true;
+    exprBuf = '';
+    setDisplay(current);
+  };
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -261,10 +261,14 @@ function toast(msg) {
     });
   });
 
-  if (historyClear) historyClear.addEventListener('click', () => { history = []; renderHistory(); });
+  if (historyClear) historyClear.addEventListener('click', () => { history = []; toolsState.calcHistory = []; toolsSaveState(toolsState); renderHistory(); });
 
   document.addEventListener('keydown', (e) => {
+    const toolsPanel = document.getElementById('toolsPanel');
+    if (!toolsPanel || !toolsPanel.classList.contains('open')) return;
     if (!document.querySelector('.tool-panel[data-panel="calculator"].active')) return;
+    const t = e.target;
+    if (t && t.id !== 'calcDisplay' && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
     if (e.key >= '0' && e.key <= '9') applyNum(e.key);
     else if (e.key === '.') dot();
     else if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') applyOp(e.key);
@@ -665,12 +669,9 @@ toolsLoadState().then((state) => {
       historyList.querySelectorAll('.calc-history-item').forEach((el) => {
         el.addEventListener('click', () => {
           const idx = parseInt(el.dataset.idx, 10);
-          const display = document.getElementById('calcDisplay');
           const h = toolsState.calcHistory[idx];
-          if (h && display) {
-            display.value = h.result;
-            // Trigger calculator state reset
-            window.dispatchEvent(new Event('focus'));
+          if (h && typeof window.setCalcDisplayValue === 'function') {
+            window.setCalcDisplayValue(h.result);
           }
         });
       });

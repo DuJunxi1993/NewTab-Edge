@@ -8,11 +8,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="panels.css" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="tools.css" />
+  <link rel="stylesheet" href="ai.css" />
 </head>
 <body>
-  <!-- Wallpaper layer -->
-  <div class="wallpaper" id="wallpaper"></div>
+  <!-- Wallpaper layer (wrap clips the blur fringe at the viewport edge) -->
+  <div class="wallpaper-wrap">
+    <div class="wallpaper" id="wallpaper"></div>
+  </div>
   <div class="wallpaper-overlay" id="wallpaperOverlay"></div>
   <div class="scanlines"></div>
   <div class="vignette"></div>
@@ -56,7 +61,6 @@
         <button type='button' class='tab tab-wkinfo' data-engine='wkinfo' role='tab'>
           <span class='tab-dot'></span>威科
         </button>
-        <span class="tab-glider" id="tabGlider"></span>
       </div>
       <div class="search-row">
 
@@ -96,31 +100,42 @@
     <div class="fs-clock-hint">点击任意位置退出</div>
   </div>
 
-  <!-- Settings Panel -->
-      <div class="settings-backdrop" id="settingsBackdrop"></div>
-<aside class="settings-panel" id="settingsPanel" aria-hidden="true">
->
-    <div class="settings-card">
-      <div class="settings-header">
-        <div class="settings-title">
+<!-- Settings Panel -->
+  <div class="panel-backdrop" id="settingsBackdrop"></div>
+  <aside class="app-panel slide-right" id="settingsPanel" aria-hidden="true">
+    <div class="panel-card">
+      <header class="panel-header">
+        <div class="panel-title">
           <span>WALLPAPER CONTROL</span>
         </div>
-        <button class="close-btn" id="closeSettings" aria-label="Close">
+        <button class="panel-close" id="closeSettings" aria-label="Close">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M18 6 6 18M6 6l12 12" />
           </svg>
         </button>
-      </div>
+      </header>
 
-      <div class="settings-body">
+      <div class="panel-body settings-body">
         <!-- Theme picker -->
         <div class="setting-group">
           <label class="setting-label">THEME // 主题</label>
-          <div class="source-tabs">
-            <button class="src-tab theme-tab active" data-theme="auto">AUTO</button>
-            <button class="src-tab theme-tab" data-theme="light">LIGHT</button>
-            <button class="src-tab theme-tab" data-theme="dark">DARK</button>
+          <div class="segmented">
+            <button class="seg-btn theme-tab active" data-theme="auto">AUTO</button>
+            <button class="seg-btn theme-tab" data-theme="light">LIGHT</button>
+            <button class="seg-btn theme-tab" data-theme="dark">DARK</button>
           </div>
+        </div>
+
+        <!-- Rainbow mode -->
+        <div class="setting-group">
+          <label class="setting-label">MULTICOLOR // 多彩模式</label>
+          <div class="segmented">
+            <button class="seg-btn rainbow-tab active" data-rainbow="off">OFF</button>
+            <button class="seg-btn rainbow-tab" data-rainbow="vivid">霓虹</button>
+            <button class="seg-btn rainbow-tab" data-rainbow="soft">柔和</button>
+            <button class="seg-btn rainbow-tab" data-rainbow="morandi">莫兰迪</button>
+          </div>
+          <div class="hint">标题逐字着色 · 引擎按钮彩色 · 搜索按钮渐变</div>
         </div>
 
         
@@ -136,10 +151,10 @@
 <!-- Source picker -->
         <div class="setting-group">
           <label class="setting-label">SOURCE // 壁纸来源</label>
-          <div class="source-tabs">
-            <button class="src-tab active" data-src="url">URL</button>
-            <button class="src-tab" data-src="upload">UPLOAD</button>
-            <button class="src-tab" data-src="builtin">BUILTIN</button>
+          <div class="segmented">
+            <button class="seg-btn active" data-src="url">URL</button>
+            <button class="seg-btn" data-src="upload">UPLOAD</button>
+            <button class="seg-btn" data-src="builtin">BUILTIN</button>
           </div>
         </div>
 
@@ -197,67 +212,66 @@
   <div class="toast" id="toast"></div>
 
 
-  <!-- ===== Tools side panel (slides in from right) ===== -->
-      <div class="tools-backdrop" id="toolsBackdrop" tabindex="-1"></div>
-<aside class="tools-panel" id="toolsPanel" aria-hidden="true">
-
-    <div class="tools-sheet" role="dialog" aria-modal="true" aria-label="Tools">
-      <header class="tools-sheet-header">
-        <h2 class="tools-sheet-title">
-          <span class="tools-sheet-icon" aria-hidden="true">
+  <!-- ===== Tools side panel (slides in from the left) ===== -->
+  <div class="panel-backdrop" id="toolsBackdrop" tabindex="-1"></div>
+  <aside class="app-panel slide-left" id="toolsPanel" aria-hidden="true">
+    <div class="panel-card" role="dialog" aria-modal="true" aria-label="Tools">
+      <header class="panel-header">
+        <h2 class="panel-title">
+          <span class="panel-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.93a2.12 2.12 0 0 1-3-3l6.92-6.93a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
             </svg>
           </span>
           <span>Tools</span>
         </h2>
-        <button class="tools-sheet-close" id="toolsSheetClose" type="button" aria-label="Close">
+        <button class="panel-close" id="toolsSheetClose" type="button" aria-label="Close">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M18 6L6 18M6 6l12 12" />
           </svg>
         </button>
       </header>
 
-      <nav class="tools-sheet-tabs" id="toolsSheetTabs" aria-label="Tool tabs">
-        <button class="tools-sheet-tab active" data-tool="calculator" type="button">
+      <nav class="segmented seg-sm tools-tabs" id="toolsSheetTabs" aria-label="Tool tabs">
+        <button class="seg-btn active" data-tool="calculator" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h.01M12 19h.01M16 19h.01"/></svg>
           <span>计算器</span>
         </button>
-        <button class="tools-sheet-tab" data-tool="base" type="button">
+        <button class="seg-btn" data-tool="base" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h16"/><path d="M16 10l4 2-4 2"/></svg>
           <span>进制</span>
         </button>
-        <button class="tools-sheet-tab" data-tool="encode" type="button">
+        <button class="seg-btn" data-tool="encode" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h12v14H8"/><path d="M16 10l-4-2-4 2 4 2 4-2-4-2z"/></svg>
           <span>编码</span>
         </button>
-        <button class="tools-sheet-tab" data-tool="amount" type="button">
+        <button class="seg-btn" data-tool="amount" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
           <span>金额</span>
         </button>
-        <button class="tools-sheet-tab" data-tool="color" type="button">
+        <button class="seg-btn" data-tool="color" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="9" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="10" cy="14" r="1"/><circle cx="14" cy="15" r="1"/></svg>
           <span>配色</span>
         </button>
-        <button class="tools-sheet-tab" data-tool="random" type="button">
+        <button class="seg-btn" data-tool="random" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.2"/><circle cx="15.5" cy="15.5" r="1.2"/><circle cx="15.5" cy="8.5" r="1.2"/><circle cx="8.5" cy="15.5" r="1.2"/></svg>
           <span>随机</span>
         </button>
-        <button class="tools-sheet-tab" data-tool="json" type="button">
+        <button class="seg-btn" data-tool="json" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H6a3 3 0 0 0-3 3v2a3 3 0 0 1-3 3 3 3 0 0 1 3 3v2a3 3 0 0 0 3 3h2"/><path d="M16 3h2a3 3 0 0 1 3 3v2a3 3 0 0 0 3 3 3 3 0 0 0-3 3v2a3 3 0 0 1-3 3h-2"/></svg>
           <span>JSON</span>
         </button>
-        <button class="tools-sheet-tab" data-tool="uuid" type="button">
+        <button class="seg-btn" data-tool="uuid" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>
           <span>UUID</span>
         </button>
-        <button class="tools-sheet-tab" data-tool="timestamp" type="button">
+        <button class="seg-btn" data-tool="timestamp" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
           <span>时间</span>
         </button>
       </nav>
 
-      <main class="tools-sheet-body" id="toolsSheetBody">
+      <main class="panel-body tools-sheet-body" id="toolsSheetBody">
         <!-- Calculator -->
         <section class="tool-panel active" data-panel="calculator">
           <div class="tool-card">
@@ -312,10 +326,10 @@
             </div>
             <div class="tool-card-body">
               <div class="form-grid form-grid-2">
-                <div class="form-field"><label>BIN · 二进制</label><input type="text" id="baseBin" class="fluent-input mono" placeholder="1010" /></div>
-                <div class="form-field"><label>OCT · 八进制</label><input type="text" id="baseOct" class="fluent-input mono" placeholder="12" /></div>
-                <div class="form-field"><label>DEC · 十进制</label><input type="text" id="baseDec" class="fluent-input mono" placeholder="10" /></div>
-                <div class="form-field"><label>HEX · 十六进制</label><input type="text" id="baseHex" class="fluent-input mono" placeholder="A" /></div>
+                <div class="form-field"><label>BIN · 二进制</label><input type="text" id="baseBin" class="form-input mono" placeholder="1010" /></div>
+                <div class="form-field"><label>OCT · 八进制</label><input type="text" id="baseOct" class="form-input mono" placeholder="12" /></div>
+                <div class="form-field"><label>DEC · 十进制</label><input type="text" id="baseDec" class="form-input mono" placeholder="10" /></div>
+                <div class="form-field"><label>HEX · 十六进制</label><input type="text" id="baseHex" class="form-input mono" placeholder="A" /></div>
               </div>
             </div>
           </div>
@@ -329,15 +343,15 @@
               <p class="tool-card-subtitle">Base64 / URL / Unicode 双向转换</p>
             </div>
             <div class="tool-card-body">
-              <div class="form-field"><label>原文</label><textarea id="encInput" class="fluent-input mono" rows="3" placeholder="输入文本..."></textarea></div>
+              <div class="form-field"><label>原文</label><textarea id="encInput" class="form-input mono" rows="3" placeholder="输入文本..."></textarea></div>
               <div class="button-row">
-                <button class="fluent-btn" data-enc="base64-encode" type="button">Base64 编码</button>
-                <button class="fluent-btn" data-enc="base64-decode" type="button">Base64 解码</button>
-                <button class="fluent-btn" data-enc="url-encode" type="button">URL 编码</button>
-                <button class="fluent-btn" data-enc="url-decode" type="button">URL 解码</button>
-                <button class="fluent-btn" data-enc="unicode-escape" type="button">Unicode 转义</button>
+                <button class="form-btn" data-enc="base64-encode" type="button">Base64 编码</button>
+                <button class="form-btn" data-enc="base64-decode" type="button">Base64 解码</button>
+                <button class="form-btn" data-enc="url-encode" type="button">URL 编码</button>
+                <button class="form-btn" data-enc="url-decode" type="button">URL 解码</button>
+                <button class="form-btn" data-enc="unicode-escape" type="button">Unicode 转义</button>
               </div>
-              <div class="form-field"><label>结果</label><textarea id="encOutput" class="fluent-input mono" rows="3" readonly placeholder="结果..."></textarea></div>
+              <div class="form-field"><label>结果</label><textarea id="encOutput" class="form-input mono" rows="3" readonly placeholder="结果..."></textarea></div>
             </div>
           </div>
         </section>
@@ -350,9 +364,9 @@
               <p class="tool-card-subtitle">数字金额 → 中文财务大写</p>
             </div>
             <div class="tool-card-body">
-              <div class="form-field"><label>数字金额</label><input type="text" id="amountInput" class="fluent-input mono" placeholder="1234.56" /></div>
-              <div class="button-row"><button class="fluent-btn fluent-btn-primary" id="amountConvert" type="button">转换为大写</button></div>
-              <div class="form-field"><label>大写金额</label><textarea id="amountOutput" class="fluent-input mono" rows="2" readonly></textarea></div>
+              <div class="form-field"><label>数字金额</label><input type="text" id="amountInput" class="form-input mono" placeholder="1234.56" /></div>
+              <div class="button-row"><button class="form-btn form-btn-primary" id="amountConvert" type="button">转换为大写</button></div>
+              <div class="form-field"><label>大写金额</label><textarea id="amountOutput" class="form-input mono" rows="2" readonly></textarea></div>
             </div>
           </div>
         </section>
@@ -372,15 +386,15 @@
                     <label>HEX</label>
                     <div class="color-hex-row">
                       <input type="color" id="colorPicker" value="#0067c0" aria-label="color picker" />
-                      <input type="text" id="colorHex" class="fluent-input mono" value="#0067c0" />
+                      <input type="text" id="colorHex" class="form-input mono" value="#0067c0" />
                     </div>
                   </div>
                   <div class="form-field">
                     <label>RGB</label>
                     <div class="rgb-row mono">
-                      <input type="number" id="colorR" class="fluent-input mono" min="0" max="255" value="0" />
-                      <input type="number" id="colorG" class="fluent-input mono" min="0" max="255" value="103" />
-                      <input type="number" id="colorB" class="fluent-input mono" min="0" max="255" value="192" />
+                      <input type="number" id="colorR" class="form-input mono" min="0" max="255" value="0" />
+                      <input type="number" id="colorG" class="form-input mono" min="0" max="255" value="103" />
+                      <input type="number" id="colorB" class="form-input mono" min="0" max="255" value="192" />
                     </div>
                   </div>
                   <div class="color-readout" id="colorInfo"></div>
@@ -399,20 +413,20 @@
           <div class="tool-card">
             <div class="tool-card-header">
               <h2 class="tool-card-title">随机决定</h2>
-              <p class="tool-card-subtitle">最多填入 5 个选项，随机选出 1 个</p>
+              <p class="tool-card-subtitle">最多填入 6 个选项，随机选出 1 个</p>
             </div>
             <div class="tool-card-body">
               <div class="random-grid" id="randomInputs">
-                <input type="text" class="fluent-input" placeholder="选项 1" data-idx="0" />
-                <input type="text" class="fluent-input" placeholder="选项 2" data-idx="1" />
-                <input type="text" class="fluent-input" placeholder="选项 3" data-idx="2" />
-                <input type="text" class="fluent-input" placeholder="选项 4" data-idx="3" />
-                <input type="text" class="fluent-input" placeholder="选项 5" data-idx="4" />
-                <input type="text" class="fluent-input" placeholder="选项 6" data-idx="5" />
+                <input type="text" class="form-input" placeholder="选项 1" data-idx="0" />
+                <input type="text" class="form-input" placeholder="选项 2" data-idx="1" />
+                <input type="text" class="form-input" placeholder="选项 3" data-idx="2" />
+                <input type="text" class="form-input" placeholder="选项 4" data-idx="3" />
+                <input type="text" class="form-input" placeholder="选项 5" data-idx="4" />
+                <input type="text" class="form-input" placeholder="选项 6" data-idx="5" />
               </div>
               <div class="button-row">
-                <button class="fluent-btn fluent-btn-primary" id="randomGo" type="button">开始随机</button>
-                <button class="fluent-btn" id="randomReset" type="button">重置</button>
+                <button class="form-btn form-btn-primary" id="randomGo" type="button">开始随机</button>
+                <button class="form-btn" id="randomReset" type="button">重置</button>
               </div>
               <div class="random-result empty" id="randomResult"><span class="random-result-placeholder">填入选项后点击随机</span></div>
             </div>
@@ -427,12 +441,12 @@
               <p class="tool-card-subtitle">美化 / 压缩 / 校验</p>
             </div>
             <div class="tool-card-body">
-              <div class="form-field"><label>JSON</label><textarea id="jsonInput" class="fluent-input mono" rows="7" placeholder='{"key":"value"}'></textarea></div>
+              <div class="form-field"><label>JSON</label><textarea id="jsonInput" class="form-input mono" rows="7" placeholder='{"key":"value"}'></textarea></div>
               <div class="button-row">
-                <button class="fluent-btn fluent-btn-primary" id="jsonFormat" type="button">格式化</button>
-                <button class="fluent-btn" id="jsonMinify" type="button">压缩</button>
+                <button class="form-btn form-btn-primary" id="jsonFormat" type="button">格式化</button>
+                <button class="form-btn" id="jsonMinify" type="button">压缩</button>
               </div>
-              <div class="form-field"><label>结果</label><textarea id="jsonOutput" class="fluent-input mono" rows="7" readonly></textarea></div>
+              <div class="form-field"><label>结果</label><textarea id="jsonOutput" class="form-input mono" rows="7" readonly></textarea></div>
               <div class="status-line" id="jsonStatus" aria-live="polite"></div>
             </div>
           </div>
@@ -448,13 +462,13 @@
             <div class="tool-card-body">
               <div class="form-field form-field-inline">
                 <label for="uuidCount">数量</label>
-                <input type="number" id="uuidCount" class="fluent-input mono" value="1" min="1" max="20" />
+                <input type="number" id="uuidCount" class="form-input mono" value="1" min="1" max="20" />
               </div>
               <div class="button-row">
-                <button class="fluent-btn fluent-btn-primary" id="uuidGen" type="button">生成</button>
-                <button class="fluent-btn" id="uuidCopy" type="button">复制全部</button>
+                <button class="form-btn form-btn-primary" id="uuidGen" type="button">生成</button>
+                <button class="form-btn" id="uuidCopy" type="button">复制全部</button>
               </div>
-              <div class="form-field"><label>结果</label><textarea id="uuidOutput" class="fluent-input mono" rows="5" readonly></textarea></div>
+              <div class="form-field"><label>结果</label><textarea id="uuidOutput" class="form-input mono" rows="5" readonly></textarea></div>
             </div>
           </div>
         </section>
@@ -478,16 +492,16 @@
               <div class="form-field">
                 <label>Unix → 日期</label>
                 <div class="ts-input-row">
-                  <input type="text" id="tsInput" class="fluent-input mono" placeholder="1718236800" />
-                  <button class="fluent-btn" id="tsToDate" type="button">转换</button>
+                  <input type="text" id="tsInput" class="form-input mono" placeholder="1718236800" />
+                  <button class="form-btn" id="tsToDate" type="button">转换</button>
                 </div>
                 <div class="ts-out" id="tsToDateOut"></div>
               </div>
               <div class="form-field">
                 <label>日期 → Unix</label>
                 <div class="ts-input-row">
-                  <input type="text" id="tsDateInput" class="fluent-input mono" placeholder="2024-06-13 12:00:00" />
-                  <button class="fluent-btn" id="tsToUnix" type="button">转换</button>
+                  <input type="text" id="tsDateInput" class="form-input mono" placeholder="2024-06-13 12:00:00" />
+                  <button class="form-btn" id="tsToUnix" type="button">转换</button>
                 </div>
                 <div class="ts-out" id="tsToUnixOut"></div>
               </div>
@@ -497,13 +511,39 @@
       </main>
     </div>
   </aside>
+
+  <!-- ===== AI Assistant panel (centered flyout) ===== -->
+  <div class="panel-backdrop" id="aiBackdrop" tabindex="-1"></div>
+  <aside class="app-panel center ai-panel" id="aiPanel" aria-hidden="true">
+    <div class="panel-card">
+      <header class="panel-header">
+        <h2 class="panel-title">
+          <span class="panel-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="8" width="16" height="12" rx="3" />
+              <path d="M12 8V4" />
+              <circle cx="12" cy="3.5" r="1.5" />
+              <path d="M8.5 13h.01M15.5 13h.01" />
+              <path d="M9 16.5c.8.8 1.9 1.2 3 1.2s2.2-.4 3-1.2" />
+            </svg>
+          </span>
+          <span>AI LAB // 智能助手</span>
+        </h2>
+        <button class="panel-close" id="aiPanelClose" type="button" aria-label="Close">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </header>
+      <div class="ai-layout">
+        <nav class="ai-nav" id="aiNav" aria-label="AI sites"></nav>
+        <main class="ai-content" id="aiContent" aria-live="polite"></main>
+      </div>
+    </div>
+  </aside>
+
   <script src="script.js"></script>
   <script src="tools.js"></script>
+  <script src="ai.js"></script>
 </body>
 </html>
-
-
-
-
-
-

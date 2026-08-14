@@ -1,0 +1,201 @@
+/* ================================================
+   Shared panel framework (WinUI3 design language)
+   Used by Settings, Tools and AI panels. Each panel
+   is: .panel-backdrop + .app-panel(.slide-left |
+   .slide-right | .center) > .panel-card > header +
+   .panel-body. Segmented controls via .segmented.
+   ================================================ */
+
+/* Backdrop */
+.panel-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 199;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease, backdrop-filter 0.22s ease;
+  backdrop-filter: blur(4px) saturate(180%);
+  -webkit-backdrop-filter: blur(4px) saturate(180%);
+}
+html.theme-dark .panel-backdrop { background: rgba(0, 0, 0, 0.52); }
+.panel-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Panel base */
+.app-panel {
+  position: fixed;
+  background: var(--surface-solid);
+  z-index: 200;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+.app-panel.open {
+  pointer-events: auto;
+}
+
+/* Layout variants */
+.app-panel.slide-left {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 600px;
+  max-width: 96vw;
+  border-right: 1px solid var(--border);
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.app-panel.slide-right {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(420px, 92vw);
+  border-left: 1px solid var(--border);
+  transform: translateX(100%);
+  transition: transform 0.32s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.app-panel.slide-left.open,
+.app-panel.slide-right.open {
+  transform: translateX(0);
+}
+.app-panel.center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.96);
+  opacity: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.18s ease;
+}
+.app-panel.center.open {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+/* Card inner */
+.panel-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  flex-shrink: 0;
+}
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 600 15px 'Inter', system-ui;
+  letter-spacing: 0.2px;
+  color: var(--text-primary);
+  margin: 0;
+}
+.panel-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  background: var(--accent-light);
+  color: var(--accent);
+  border-radius: var(--radius-sm);
+}
+.panel-icon svg {
+  width: 16px;
+  height: 16px;
+}
+.panel-close {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.panel-close:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+.panel-close:active { background: var(--surface-pressed); }
+
+/* Scrollable body (per-panel padding lives on a side class) */
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Segmented control */
+.segmented {
+  display: flex;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 3px;
+  border-radius: var(--radius-md);
+}
+.seg-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 6px 4px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+.seg-btn:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+.seg-btn.active {
+  background: var(--surface-solid);
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+.seg-btn svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+  .app-panel.slide-left {
+    width: 100vw;
+    max-width: 100vw;
+    border-right: none;
+  }
+  .app-panel.slide-right {
+    width: 100vw;
+    max-width: 100vw;
+    border-left: none;
+  }
+  .app-panel.center {
+    width: 96vw;
+    height: 90vh;
+  }
+}
