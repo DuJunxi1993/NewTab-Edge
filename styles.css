@@ -945,11 +945,13 @@ html[data-rainbow="vivid"] .tab[data-engine="bing"] { color: #ff2e88; }
 html[data-rainbow="vivid"] .tab[data-engine="google"] { color: #ffd60a; }
 html[data-rainbow="vivid"] .tab[data-engine="github"] { color: #9dff3c; }
 html[data-rainbow="vivid"] .tab[data-engine="wkinfo"] { color: #ff7a00; }
+html[data-rainbow="vivid"] .tab[data-engine="bilibili"] { color: #fb7299; }
 html[data-rainbow="vivid"] .tab[data-engine="baidu"].active { color: #00e5ff; }
 html[data-rainbow="vivid"] .tab[data-engine="bing"].active { color: #ff2e88; }
 html[data-rainbow="vivid"] .tab[data-engine="google"].active { color: #ffd60a; }
 html[data-rainbow="vivid"] .tab[data-engine="github"].active { color: #9dff3c; }
 html[data-rainbow="vivid"] .tab[data-engine="wkinfo"].active { color: #ff7a00; }
+html[data-rainbow="vivid"] .tab[data-engine="bilibili"].active { color: #fb7299; }
 html[data-rainbow="vivid"] .search-btn {
   background: linear-gradient(90deg, #ff2e88, #ff7a00, #ffd60a);
   border: none;
@@ -968,11 +970,13 @@ html[data-rainbow="soft"] .tab[data-engine="bing"] { color: #ef9ec4; }
 html[data-rainbow="soft"] .tab[data-engine="google"] { color: #ecd98a; }
 html[data-rainbow="soft"] .tab[data-engine="github"] { color: #b8d9a1; }
 html[data-rainbow="soft"] .tab[data-engine="wkinfo"] { color: #e5b48f; }
+html[data-rainbow="soft"] .tab[data-engine="bilibili"] { color: #f3b3c4; }
 html[data-rainbow="soft"] .tab[data-engine="baidu"].active { color: #7fd4e6; }
 html[data-rainbow="soft"] .tab[data-engine="bing"].active { color: #ef9ec4; }
 html[data-rainbow="soft"] .tab[data-engine="google"].active { color: #ecd98a; }
 html[data-rainbow="soft"] .tab[data-engine="github"].active { color: #b8d9a1; }
 html[data-rainbow="soft"] .tab[data-engine="wkinfo"].active { color: #e5b48f; }
+html[data-rainbow="soft"] .tab[data-engine="bilibili"].active { color: #f3b3c4; }
 html[data-rainbow="soft"] .search-btn {
   background: linear-gradient(90deg, #ef9ec4, #e5b48f, #ecd98a);
   border: none;
@@ -991,11 +995,13 @@ html[data-rainbow="morandi"] .tab[data-engine="bing"] { color: #c2a0ac; }
 html[data-rainbow="morandi"] .tab[data-engine="google"] { color: #c9b98f; }
 html[data-rainbow="morandi"] .tab[data-engine="github"] { color: #a5b29a; }
 html[data-rainbow="morandi"] .tab[data-engine="wkinfo"] { color: #c2a48c; }
+html[data-rainbow="morandi"] .tab[data-engine="bilibili"] { color: #c69aa6; }
 html[data-rainbow="morandi"] .tab[data-engine="baidu"].active { color: #8aa8b5; }
 html[data-rainbow="morandi"] .tab[data-engine="bing"].active { color: #c2a0ac; }
 html[data-rainbow="morandi"] .tab[data-engine="google"].active { color: #c9b98f; }
 html[data-rainbow="morandi"] .tab[data-engine="github"].active { color: #a5b29a; }
 html[data-rainbow="morandi"] .tab[data-engine="wkinfo"].active { color: #c2a48c; }
+html[data-rainbow="morandi"] .tab[data-engine="bilibili"].active { color: #c69aa6; }
 html[data-rainbow="morandi"] .search-btn {
   background: linear-gradient(90deg, #c2a0ac, #c2a48c, #c9b98f);
   border: none;
