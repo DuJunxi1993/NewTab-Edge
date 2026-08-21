@@ -378,6 +378,16 @@ function renderEngineTabs() {
   if (!visible.has(state.engine)) {
     state.engine = visibleEngineIds()[0] || 'baidu';
   }
+  // Reorder the live DOM nodes to match the user's saved order, then
+  // toggle visibility + active state. We use appendChild to move nodes
+  // (idempotent: appending an existing child just moves it).
+  const container = searchTabs[0]?.parentElement;
+  if (container) {
+    visibleEngineIds().forEach((id) => {
+      const node = Array.from(searchTabs).find((t) => t.dataset.engine === id);
+      if (node) container.appendChild(node);
+    });
+  }
   searchTabs.forEach((t) => {
     const id = t.dataset.engine;
     const show = visible.has(id);
