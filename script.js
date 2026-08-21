@@ -83,7 +83,14 @@ const ENGINES = {
     label: '威科',
     url: (q) => `https://law.wkinfo.com.cn/legislation/list?simple=${encodeURIComponent(q)}`,
   },
+  bilibili: {
+    label: 'BILIBILI',
+    url: (q) => `https://search.bilibili.com/all?keyword=${encodeURIComponent(q)}`,
+  },
 };
+
+// Display order for both the main tab strip and the settings picker
+const ENGINE_ORDER = ['baidu', 'bing', 'google', 'github', 'wkinfo', 'bilibili'];
 
 // ---------- State ----------
 const DEFAULT_STATE = {
@@ -96,6 +103,7 @@ const DEFAULT_STATE = {
   customTitle: '',
   rainbowMode: 'off',  // 'off' | 'vivid' | 'soft' | 'morandi'
   aiSites: [],
+  visibleEngines: null, // null = use default (all engines visible)
 };
 
 let state = { ...DEFAULT_STATE };
@@ -356,15 +364,77 @@ saturationSlider.addEventListener('input', (e) => {
 });
 
 // ---------- Search ----------
+function visibleEngineIds() {
+  if (Array.isArray(state.visibleEngines) && state.visibleEngines.length) {
+    return state.visibleEngines.filter((id) => ENGINES[id]);
+  }
+  return ENGINE_ORDER.filter((id) => ENGINES[id]);
+}
+
+function renderEngineTabs() {
+  const visible = new Set(visibleEngineIds());
+  // If the active engine is hidden (just toggled off), fall back to the
+  // first remaining visible engine.
+  if (!visible.has(state.engine)) {
+    state.engine = visibleEngineIds()[0] || 'baidu';
+  }
+  searchTabs.forEach((t) => {
+    const id = t.dataset.engine;
+    const show = visible.has(id);
+    t.hidden = !show;
+    t.style.display = show ? '' : 'none';
+    t.classList.toggle('active', show && id === state.engine);
+  });
+  engineLabel.textContent = ENGINES[state.engine]
+    ? ENGINES[state.engine].label.charAt(0) + ENGINES[state.engine].label.slice(1).toLowerCase()
+    : '';
+}
+
 function setEngine(name) {
   if (!ENGINES[name]) return;
+  if (!visibleEngineIds().includes(name)) return;
   state.engine = name;
-  searchTabs.forEach((t) => t.classList.toggle('active', t.dataset.engine === name));
-  engineLabel.textContent = ENGINES[name].label.charAt(0) + ENGINES[name].label.slice(1).toLowerCase();
+  renderEngineTabs();
   persist();
 }
 
 searchTabs.forEach((t) => t.addEventListener('click', () => setEngine(t.dataset.engine)));
+
+function renderEnginePicker() {
+  const picker = document.getElementById('enginePicker');
+  if (!picker) return;
+  picker.innerHTML = '';
+  const visible = new Set(visibleEngineIds());
+  ENGINE_ORDER.filter((id) => ENGINES[id]).forEach((id) => {
+    const row = document.createElement('label');
+    row.className = 'engine-pick';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.dataset.engine = id;
+    cb.checked = visible.has(id);
+    cb.addEventListener('change', () => {
+      const current = new Set(visibleEngineIds());
+      if (cb.checked) current.add(id);
+      else current.delete(id);
+      // Enforce "at least one visible": if user tried to disable the
+      // last one, silently revert and notify.
+      if (current.size === 0) {
+        cb.checked = true;
+        toast('至少保留一个搜索引擎', true);
+        return;
+      }
+      state.visibleEngines = ENGINE_ORDER.filter((k) => current.has(k));
+      renderEngineTabs();
+      renderEnginePicker();
+      persist();
+    });
+    const text = document.createElement('span');
+    text.textContent = ENGINES[id].label.charAt(0) + ENGINES[id].label.slice(1).toLowerCase();
+    row.appendChild(cb);
+    row.appendChild(text);
+    picker.appendChild(row);
+  });
+}
 
 function performSearch(e) {
   e.preventDefault();
@@ -425,12 +495,15 @@ document.addEventListener('click', (e) => {
 // ---------- Reset ----------
 resetBtn.addEventListener('click', () => {
   state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+  // Reset visible engines to the built-in defaults
+  state.visibleEngines = ENGINE_ORDER.slice();
   wallpaperUrlInput.value = '';
   fileHint.textContent = 'No file selected';
   applyWallpaper();
   applyFilters();
   renderBuiltinGrid();
-  setEngine(state.engine);
+  renderEngineTabs();
+  renderEnginePicker();
   setSource('url');
   applyTheme();
   applyRainbow();
@@ -502,10 +575,27 @@ async function init() {
     else if (state.rainbowMode === false || state.rainbowMode === undefined) state.rainbowMode = 'off';
     else if (!RAINBOW_PALETTES[state.rainbowMode]) state.rainbowMode = 'off';
   }
+  // Resolve visibleEngines: legacy null/missing → all visible; sanitise
+  // any unknown ids (e.g. engines removed in a later build).
+  if (!Array.isArray(state.visibleEngines)) {
+    state.visibleEngines = ENGINE_ORDER.slice();
+  } else {
+    state.visibleEngines = state.visibleEngines.filter((id) => ENGINES[id]);
+  }
+  // Guarantee at least one visible engine; if none, fall back to default
+  if (state.visibleEngines.length === 0) {
+    state.visibleEngines = ENGINE_ORDER.slice();
+  }
+  // Ensure active engine is in the visible set; otherwise fall back to
+  // the first visible engine.
+  if (!state.visibleEngines.includes(state.engine)) {
+    state.engine = state.visibleEngines[0];
+  }
   applyWallpaper();
   applyFilters();
   renderBuiltinGrid();
-  setEngine(state.engine);
+  renderEngineTabs();
+  renderEnginePicker();
   setSource('url');
   applyTheme();
   applyRainbow();
