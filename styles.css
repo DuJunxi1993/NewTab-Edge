@@ -1017,15 +1017,15 @@ html[data-rainbow="morandi"] .search-btn:active {
 
 /* ----- Search engine visibility picker (settings panel) ----- */
 .engine-picker {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   margin-top: 4px;
 }
 .engine-pick {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   padding: 6px 10px;
   background: var(--surface-solid);
   border: 1px solid var(--border);
@@ -1033,12 +1033,54 @@ html[data-rainbow="morandi"] .search-btn:active {
   font-size: 12px;
   font-family: inherit;
   color: var(--text-primary);
-  cursor: pointer;
+  cursor: grab;
   user-select: none;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s, background 0.15s, opacity 0.15s, transform 0.1s;
 }
 .engine-pick:hover {
   border-color: var(--accent);
+}
+.engine-pick:active {
+  cursor: grabbing;
+}
+.engine-pick.dragging {
+  opacity: 0.45;
+  transform: scale(0.98);
+}
+.engine-pick.drop-before {
+  box-shadow: inset 0 2px 0 0 var(--accent);
+}
+.engine-pick.drop-after {
+  box-shadow: inset 0 -2px 0 0 var(--accent);
+}
+.engine-pick-handle {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  font-size: 14px;
+  line-height: 1;
+  cursor: grab;
+  letter-spacing: -2px;
+  /* Center the braille-pattern glyph vertically */
+  display: inline-flex;
+  align-items: center;
+  height: 14px;
+}
+.engine-pick-handle:hover {
+  color: var(--accent);
+}
+.engine-pick-text {
+  flex: 1;
+  min-width: 0;
+}
+.engine-pick-hidden {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-family: "JetBrains Mono", monospace;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 3px;
+  color: var(--text-tertiary);
 }
 .engine-pick input[type="checkbox"] {
   appearance: none;

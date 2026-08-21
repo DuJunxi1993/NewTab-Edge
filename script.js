@@ -405,9 +405,22 @@ function renderEnginePicker() {
   if (!picker) return;
   picker.innerHTML = '';
   const visible = new Set(visibleEngineIds());
-  ENGINE_ORDER.filter((id) => ENGINES[id]).forEach((id) => {
-    const row = document.createElement('label');
+  // Iterate the user's saved order; any new engines (added in a later
+  // build) that aren't in the saved list still get appended at the end
+  // so users can reorder/hide them too.
+  const order = orderedEngineIds();
+  order.forEach((id) => {
+    const row = document.createElement('div');
     row.className = 'engine-pick';
+    row.draggable = true;
+    row.dataset.engine = id;
+
+    // Drag handle (visual affordance — the whole row is also draggable).
+    const handle = document.createElement('span');
+    handle.className = 'engine-pick-handle';
+    handle.setAttribute('aria-hidden', 'true');
+    handle.textContent = '⠿';
+
     const cb = document.createElement('input');
     cb.type = 'checkbox';
     cb.dataset.engine = id;
@@ -423,17 +436,97 @@ function renderEnginePicker() {
         toast('至少保留一个搜索引擎', true);
         return;
       }
-      state.visibleEngines = ENGINE_ORDER.filter((k) => current.has(k));
+      // Preserve the current row order; just toggle membership.
+      state.visibleEngines = orderedEngineIds().filter((k) => current.has(k));
       renderEngineTabs();
       renderEnginePicker();
       persist();
     });
+
     const text = document.createElement('span');
+    text.className = 'engine-pick-text';
     text.textContent = ENGINES[id].label.charAt(0) + ENGINES[id].label.slice(1).toLowerCase();
+
+    // "Hidden" badge for engines the user has currently disabled.
+    if (!cb.checked) {
+      const hidden = document.createElement('span');
+      hidden.className = 'engine-pick-hidden';
+      hidden.textContent = 'hidden';
+      row.appendChild(hidden);
+    }
+
+    row.appendChild(handle);
     row.appendChild(cb);
     row.appendChild(text);
     picker.appendChild(row);
+
+    // ----- HTML5 drag-and-drop wiring -----
+    row.addEventListener('dragstart', (e) => {
+      // Required for Firefox; dataTransfer.setData is needed for any
+      // real cross-element drag to fire `drop`.
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', id);
+      row.classList.add('dragging');
+    });
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      // Clear any residual indicator on the picker
+      picker.querySelectorAll('.drop-before, .drop-after').forEach((el) => {
+        el.classList.remove('drop-before', 'drop-after');
+      });
+    });
+    row.addEventListener('dragover', (e) => {
+      // Only honour "move" drags originating from this picker.
+      if (!Array.from(e.dataTransfer.types).includes('text/plain')) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const rect = row.getBoundingClientRect();
+      const before = (e.clientY - rect.top) < rect.height / 2;
+      // Clear sibling indicators so only one row shows the insertion line.
+      picker.querySelectorAll('.drop-before, .drop-after').forEach((el) => {
+        if (el !== row) el.classList.remove('drop-before', 'drop-after');
+      });
+      row.classList.toggle('drop-before', before);
+      row.classList.toggle('drop-after', !before);
+    });
+    row.addEventListener('dragleave', () => {
+      row.classList.remove('drop-before', 'drop-after');
+    });
+    row.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const draggedId = e.dataTransfer.getData('text/plain');
+      if (!draggedId || draggedId === id) return;
+      const rect = row.getBoundingClientRect();
+      const before = (e.clientY - rect.top) < rect.height / 2;
+      reorderEngine(draggedId, id, before);
+    });
   });
+}
+
+// Order to render the picker in: starts from the user's saved order, then
+// appends any new engines (known to the build but not in the saved list).
+function orderedEngineIds() {
+  const saved = Array.isArray(state.visibleEngines) ? state.visibleEngines : [];
+  const known = ENGINE_ORDER.filter((id) => ENGINES[id]);
+  const out = saved.filter((id) => ENGINES[id]);
+  known.forEach((id) => { if (!out.includes(id)) out.push(id); });
+  return out;
+}
+
+function reorderEngine(draggedId, targetId, before) {
+  if (!ENGINES[draggedId] || !ENGINES[targetId] || draggedId === targetId) return;
+  const list = orderedEngineIds().slice();
+  const fromIdx = list.indexOf(draggedId);
+  if (fromIdx === -1) return;
+  list.splice(fromIdx, 1);
+  let toIdx = list.indexOf(targetId);
+  if (toIdx === -1) return;
+  if (!before) toIdx += 1;
+  list.splice(toIdx, 0, draggedId);
+  state.visibleEngines = list;
+  renderEngineTabs();
+  renderEnginePicker();
+  persist();
 }
 
 function performSearch(e) {

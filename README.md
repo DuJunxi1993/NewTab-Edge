@@ -7,7 +7,7 @@ A minimal Chrome / Edge new tab override with a cyberpunk HUD aesthetic.
 - **Custom wallpaper** — set from URL, local file upload (max 10 MB), or pick from 6 built-in cyberpunk presets.
 - **Adjustable filters** — live sliders for **blur (0-20 px)**, **brightness (40-160 %)**, and **saturation (0-200 %)**.
 - **Multi-engine search** — switch between **Baidu** / **Bing** / **Google** / **GitHub** / **威科** / **Bilibili** with one click.
-- **Custom engine bar** — pick which engines appear in the main search strip from the settings panel (at least one must stay enabled).
+- **Custom engine bar** — pick which engines appear in the main search strip from the settings panel (at least one must stay enabled). Drag rows to reorder; the main search strip mirrors the same order.
 - **Persistent settings** — stored via `chrome.storage.local` (falls back to `localStorage` in dev).
 - **Cyberpunk HUD** — angled corner brackets, scanlines, glitch animation on the title, neon glow accents.
 - **Title typography** — classical European handwriting font (`Great Vibes`) at large size, weight 900.
