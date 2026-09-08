@@ -55,10 +55,8 @@ let toolsState = { ...TOOLS_DEFAULT_STATE };
   if (!panel) return;
 
   function open() {
-    // Mutual exclusion with the AI panel
-    document.getElementById('aiPanel')?.classList.remove('open');
-    document.getElementById('aiBackdrop')?.classList.remove('open');
-    document.body.classList.remove('ai-open');
+    // Mutual exclusion with the search preview panel
+    if (typeof window.closeSearchPreview === 'function') window.closeSearchPreview();
     panel.classList.add('open');
     panel.setAttribute('aria-hidden', 'false');
     document.body.classList.add('tools-open');

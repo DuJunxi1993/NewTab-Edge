@@ -102,8 +102,8 @@ const DEFAULT_STATE = {
   themeMode: 'auto',  // 'auto' | 'light' | 'dark'
   customTitle: '',
   rainbowMode: 'off',  // 'off' | 'vivid' | 'soft' | 'morandi'
-  aiSites: [],
   visibleEngines: null, // null = use default (all engines visible)
+  preview: { open: false, url: '', engine: '', query: '' },
 };
 
 let state = { ...DEFAULT_STATE };
@@ -548,11 +548,26 @@ function performSearch(e) {
     return;
   }
   const engine = ENGINES[state.engine];
-  window.open(engine.url(q), '_blank', 'noopener');
-  // Do NOT force focus back to the input after submitting — opening a
-  // new tab already triggers Edge's own focus handling, and a forced
-  // refocus races with that, frequently causing IME focus loss. The
-  // user can press `/` (or click the input) to start the next query.
+  if (!engine) {
+    toast('No search engine selected', true);
+    return;
+  }
+  const url = engine.url(q);
+  // Open the preview panel instead of a new tab. preview.js exposes
+  // window.openSearchPreview(query, engine, url); it writes the URL
+  // into state.preview so the same query survives an NTP reload
+  // within the session.
+  if (typeof window.openSearchPreview === 'function') {
+    const ok = window.openSearchPreview(q, state.engine, url);
+    if (!ok) window.open(url, '_blank', 'noopener');
+  } else {
+    window.open(url, '_blank', 'noopener');
+  }
+  // Keep focus on the input — the user usually wants to refine the
+  // query next. We deliberately do NOT refocus if focus has moved to
+  // an element inside the preview iframe (the user may have clicked
+  // a result inside).
+  focusInput();
 }
 
 searchForm.addEventListener('submit', performSearch);
@@ -577,10 +592,8 @@ searchBtn.addEventListener('click', performSearch);
 // ---------- Settings panel ----------
 settingsBtn?.addEventListener('click', () => {
   if (!settingsPanel) return;
-  // Mutual exclusion with the AI panel
-  document.getElementById('aiPanel')?.classList.remove('open');
-  document.getElementById('aiBackdrop')?.classList.remove('open');
-  document.body.classList.remove('ai-open');
+  // Mutual exclusion with the search preview panel
+  if (typeof window.closeSearchPreview === 'function') window.closeSearchPreview();
   settingsPanel.classList.add('open');
   settingsPanel.setAttribute('aria-hidden', 'false');
   document.getElementById('settingsBackdrop')?.classList.add('open');
@@ -622,6 +635,9 @@ resetBtn.addEventListener('click', () => {
   state = JSON.parse(JSON.stringify(DEFAULT_STATE));
   // Reset visible engines to the built-in defaults
   state.visibleEngines = ENGINE_ORDER.slice();
+  // Close any open preview panel + clear its stored URL.
+  if (typeof window.closeSearchPreview === 'function') window.closeSearchPreview();
+  state.preview = { open: false, url: '', engine: '', query: '' };
   wallpaperUrlInput.value = '';
   fileHint.textContent = 'No file selected';
   applyWallpaper();
@@ -716,6 +732,15 @@ async function init() {
   if (!state.visibleEngines.includes(state.engine)) {
     state.engine = state.visibleEngines[0];
   }
+  // Normalise preview state: always start closed on a fresh NTP
+  // load (no auto-restore across browser sessions). The iframe is
+  // also never re-created here — preview.js handles re-mount on
+  // demand.
+  if (!state.preview || typeof state.preview !== 'object') {
+    state.preview = { open: false, url: '', engine: '', query: '' };
+  } else {
+    state.preview.open = false;
+  }
   applyWallpaper();
   applyFilters();
   renderBuiltinGrid();
@@ -733,15 +758,6 @@ async function init() {
   bindThemeControls();
   bindRainbowControls();
   bindTitleInput();
-  // Defer to a macrotask: ai.js loads after this script, so the
-  // render function only exists once parsing of all scripts ends.
-  // (A 0ms timer can fire between external scripts, before ai.js is
-  // parsed — 250ms is the primary trigger; ai.js also self-checks
-  // __stateReady below, covering both orderings.)
-  window.__stateReady = true;
-  setTimeout(() => {
-    if (typeof window.renderAiPanel === 'function') renderAiPanel();
-  }, 250);
 }
 
 // ---- Focus management: aggressively claim the input when the tab

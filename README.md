@@ -8,6 +8,7 @@ A minimal Chrome / Edge new tab override with a cyberpunk HUD aesthetic.
 - **Adjustable filters** — live sliders for **blur (0-20 px)**, **brightness (40-160 %)**, and **saturation (0-200 %)**.
 - **Multi-engine search** — switch between **Baidu** / **Bing** / **Google** / **GitHub** / **威科** / **Bilibili** with one click.
 - **Custom engine bar** — pick which engines appear in the main search strip from the settings panel (at least one must stay enabled). Drag rows to reorder; the main search strip mirrors the same order.
+- **Inline search preview** — pressing Enter in the search box no longer opens a new tab. Instead, a right-side drawer slides in and renders the chosen engine's SERP inside an iframe, so you can keep searching and refining without losing your place. Close the drawer with `Esc`, the toolbar `✕`, or by clicking the dimmed background. Use the toolbar `↗` button to open the current results in a real tab. The drawer state survives an NTP reload within the same browser session.
 - **Persistent settings** — stored via `chrome.storage.local` (falls back to `localStorage` in dev).
 - **Cyberpunk HUD** — angled corner brackets, scanlines, glitch animation on the title, neon glow accents.
 - **Title typography** — classical European handwriting font (`Great Vibes`) at large size, weight 900.
@@ -20,6 +21,11 @@ CyberpunkNewTab/
 ├── newtab.html         Main markup
 ├── styles.css          Cyberpunk stylesheet
 ├── script.js           Wallpaper / search / settings logic
+├── tools.js            Tools panel (calculator / converter / ...)
+├── preview.js          Inline search preview drawer
+├── panels.css          Shared panel framework (slide-left / -right / center)
+├── tools.css           Tools panel styles
+├── preview.css         Search preview drawer styles
 ├── icons/
 │   ├── icon16.png
 │   ├── icon48.png
@@ -37,8 +43,8 @@ CyberpunkNewTab/
 ## Keyboard shortcuts
 
 - `/` — focus the search box
-- `Enter` — run search
-- `Esc` — close settings panel
+- `Enter` — run search (opens the inline preview drawer, not a new tab)
+- `Esc` — close the settings panel, tools panel, or preview drawer
 
 ## Notes
 

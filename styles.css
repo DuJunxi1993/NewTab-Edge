@@ -282,11 +282,6 @@ body::before {
   color: var(--text-primary);
   text-shadow: var(--title-text-shadow);
   animation: titleFade 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) both;
-  cursor: pointer;
-  transition: color 0.18s ease;
-}
-.title:hover {
-  color: var(--accent);
 }
 
 @keyframes titleFade {
