@@ -544,7 +544,7 @@ function performSearch(e) {
   const q = searchInput.value.trim();
   if (!q) {
     toast('Enter a query first', true);
-    searchInput.focus();
+    focusInput({ force: true });
     return;
   }
   const engine = ENGINES[state.engine];
@@ -596,7 +596,7 @@ document.addEventListener('keydown', (e) => {
   // or we'd swallow the "/" candidate the user is currently typing.
   if (e.key === '/' && !e.isComposing && e.keyCode !== 229 && document.activeElement !== searchInput) {
     e.preventDefault();
-    searchInput.focus();
+    focusInput();
   }
 });
 
@@ -744,19 +744,45 @@ async function init() {
   }, 250);
 }
 
-// When Edge activates this tab, the omnibox often keeps focus and the
-// `autofocus` on the input is no help (it fires at parse time, not at
-// tab activation). Re-claim focus from the omnibox here, but only when
-// the page hasn't been interacted with yet — never steal focus from a
-// focused element the user intentionally chose.
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState !== 'visible') return;
-  // If focus has already settled on a real element inside the page,
-  // do nothing.
+// ---- Focus management: aggressively claim the input when the tab
+// becomes visible. Edge's new-tab page normally leaves focus in the
+// omnibox, and Chromium has no API to override that from an extension.
+// We re-claim focus here whenever the page becomes visible AND the
+// user hasn't already focused something else on the page.
+//
+// `focusInput` is also reused by:
+//
+//   * `visibilitychange` — fires when the user activates the tab.
+//   * `pageshow`         — fires on load + BFCache restore.
+//   * a one-shot rAF after init — the omnibox only releases focus
+//     after the page finishes its initial layout; one animation frame
+//     is enough for most cases.
+//   * the empty-query branch of `performSearch` — keep the input
+//     focused after a failed submit.
+//
+function focusInput({ force = false } = {}) {
   const ae = document.activeElement;
-  if (ae && ae !== document.body) return;
+  // Skip if the user is already typing in the search input.
+  if (ae === searchInput) return;
+  // Skip if the user has focused another text-entry on the page
+  // (e.g. an option in the settings panel). `force` opts out of this
+  // guard for the omnibox-reclaim path.
+  if (!force && ae && ae !== document.body && ae !== document.documentElement) {
+    const tag = ae.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || ae.isContentEditable) return;
+  }
   searchInput.focus({ preventScroll: true });
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') focusInput({ force: true });
 });
+
+window.addEventListener('pageshow', () => focusInput({ force: true }));
+
+// One extra claim after the first paint, in case the omnibox grabbed
+// focus back between `pageshow` and now.
+requestAnimationFrame(() => focusInput({ force: true }));
 
 const RAINBOW_PALETTES = {
   vivid:   ['#00e5ff', '#ff2e88', '#ffd60a', '#9dff3c', '#ff7a00', '#b26bff', '#00ff9d'],
