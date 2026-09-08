@@ -62,30 +62,42 @@ const BUILTIN_WALLPAPERS = [
 ];
 
 // ---------- Search engines ----------
+// `iframeFriendly` indicates whether the engine's SERP can be rendered
+// inside a cross-origin <iframe>. Engines that return a strict
+// Content-Security-Policy: frame-ancestors header (e.g. Baidu) will be
+// blocked by Chromium when embedded from a chrome-extension:// page —
+// `ERR_BLOCKED_BY_RESPONSE` shows up as "www.baidu.com 拒绝连接". We
+// route those engines straight to a new tab and show a toast.
 const ENGINES = {
   baidu: {
     label: 'BAIDU',
     url: (q) => `https://www.baidu.com/s?wd=${encodeURIComponent(q)}`,
+    iframeFriendly: false,
   },
   bing: {
     label: 'BING',
     url: (q) => `https://www.bing.com/search?q=${encodeURIComponent(q)}`,
+    iframeFriendly: true,
   },
   google: {
     label: 'GOOGLE',
     url: (q) => `https://www.google.com/search?q=${encodeURIComponent(q)}`,
+    iframeFriendly: true,
   },
   github: {
     label: 'GITHUB',
     url: (q) => `https://github.com/search?q=${encodeURIComponent(q)}`,
+    iframeFriendly: true,
   },
   wkinfo: {
     label: '威科',
     url: (q) => `https://law.wkinfo.com.cn/legislation/list?simple=${encodeURIComponent(q)}`,
+    iframeFriendly: true,
   },
   bilibili: {
     label: 'BILIBILI',
     url: (q) => `https://search.bilibili.com/all?keyword=${encodeURIComponent(q)}`,
+    iframeFriendly: true,
   },
 };
 
@@ -553,6 +565,17 @@ function performSearch(e) {
     return;
   }
   const url = engine.url(q);
+  // Some engines (e.g. Baidu) ship a strict
+  // `Content-Security-Policy: frame-ancestors` header that excludes
+  // `chrome-extension://`. Chromium refuses to render those SERPs in
+  // our iframe drawer. For those engines, open a real tab instead and
+  // let the user know why.
+  if (engine.iframeFriendly === false) {
+    window.open(url, '_blank', 'noopener');
+    toast(`${engine.label.charAt(0) + engine.label.slice(1).toLowerCase()} 拒绝嵌入，已在新标签页打开`);
+    focusInput();
+    return;
+  }
   // Open the preview panel instead of a new tab. preview.js exposes
   // window.openSearchPreview(query, engine, url); it writes the URL
   // into state.preview so the same query survives an NTP reload
