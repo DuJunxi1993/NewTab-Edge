@@ -365,8 +365,14 @@
         .filter((s) => s && typeof s === 'object' && s.name && s.url && !s.builtin)
         .map((s) => ({ id: String(s.id), name: String(s.name), url: String(s.url), builtin: false }))
     );
+    // Build the nav list only. DO NOT auto-select a site here — that
+    // would create an <iframe> (eagerly loading doubao / trae / DSH),
+    // and Chromium transfers focus to the new iframe as soon as it's
+    // appended to the DOM. That rips focus away from the search
+    // input ~250ms after the new tab opens, breaking any text the
+    // user is starting to type. The iframe is created lazily inside
+    // select() when the user actually clicks a nav button.
     render();
-    if (sites.length) select(sites[0].id);
   };
 
   btn.addEventListener('click', open);
