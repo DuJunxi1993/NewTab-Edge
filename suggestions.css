@@ -1,0 +1,249 @@
+/* ================================================
+   Search autocomplete suggestions + history popover.
+
+   - .suggest-list: lives inside .search-row, absolutely
+     positioned under the input. Hidden by default (via
+     [hidden]); script.js toggles it.
+   - .history-popover: centred floating card toggled by
+     clicking the page title. Independent from the
+     preview drawer; either may be open, never both.
+   ================================================ */
+
+/* ----- Suggestion dropdown (anchored under the input) ----- */
+.search-row { position: relative; }
+
+.suggest-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: 25;
+}
+.suggest-list[hidden] { display: none; }
+.suggest-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  font: 400 13px 'Inter', system-ui;
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  user-select: none;
+}
+.suggest-item:hover,
+.suggest-item.active {
+  background: var(--surface-hover);
+  color: var(--accent);
+}
+.suggest-item .suggest-engine {
+  flex-shrink: 0;
+  font: 500 10px 'JetBrains Mono', ui-monospace, monospace;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+}
+.suggest-item.active .suggest-engine,
+.suggest-item:hover .suggest-engine {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.suggest-item .suggest-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.suggest-item .suggest-text mark {
+  background: transparent;
+  color: var(--accent);
+  font-weight: 600;
+}
+.suggest-empty {
+  padding: 10px 12px;
+  font: 400 12px 'Inter', system-ui;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+/* ----- History popover (floats over the page) ----- */
+.history-popover {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 14vh;
+  z-index: 195; /* below preview drawer (200), above settings body */
+  background: rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.18s ease;
+}
+html.theme-dark .history-popover { background: rgba(0, 0, 0, 0.32); }
+.history-popover.open {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+}
+.history-popover[hidden] { display: none; }
+
+.history-card {
+  width: min(560px, 92vw);
+  max-height: 70vh;
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateY(-8px) scale(0.98);
+  opacity: 0;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+.history-popover.open .history-card {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.history-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 600 14px 'Inter', system-ui;
+  color: var(--text-primary);
+}
+.history-title svg { color: var(--accent); }
+.history-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.history-clear,
+.history-close {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font: 500 11px 'Inter', system-ui;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.history-clear { padding: 4px 10px; }
+.history-close {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+}
+.history-clear:hover,
+.history-close:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+.history-close:hover {
+  background: rgba(209, 52, 56, 0.08);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.history-list {
+  flex: 1;
+  overflow-y: auto;
+  margin: 0;
+  padding: 8px;
+  list-style: none;
+}
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s;
+}
+.history-item:hover {
+  background: var(--surface-hover);
+}
+.history-item .history-text {
+  flex: 1;
+  min-width: 0;
+  font: 400 13px 'Inter', system-ui;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.history-item .history-engine {
+  flex-shrink: 0;
+  font: 500 10px 'JetBrains Mono', ui-monospace, monospace;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+}
+.history-item .history-time {
+  flex-shrink: 0;
+  font: 400 11px 'JetBrains Mono', ui-monospace, monospace;
+  color: var(--text-tertiary);
+}
+.history-item .history-remove {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s, background 0.12s, color 0.12s;
+}
+.history-item:hover .history-remove {
+  opacity: 1;
+}
+.history-item .history-remove:hover {
+  background: rgba(209, 52, 56, 0.08);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.history-empty {
+  padding: 32px 16px;
+  text-align: center;
+  font: 400 13px 'Inter', system-ui;
+  color: var(--text-tertiary);
+  display: none;
+}
+.history-empty.visible { display: block; }

@@ -68,36 +68,89 @@ const BUILTIN_WALLPAPERS = [
 // blocked by Chromium when embedded from a chrome-extension:// page —
 // `ERR_BLOCKED_BY_RESPONSE` shows up as "www.baidu.com 拒绝连接". We
 // route those engines straight to a new tab and show a toast.
+//
+// `suggestUrl(q)` and `parseSuggestions(raw)` provide live
+// autocomplete for the search input. Engines without these fields
+// simply show no suggestions for that engine.
 const ENGINES = {
   baidu: {
     label: 'BAIDU',
     url: (q) => `https://www.baidu.com/s?wd=${encodeURIComponent(q)}`,
     iframeFriendly: false,
+    suggestUrl: (q) =>
+      `https://www.baidu.com/sugrec?pre=1&p=3&ie=utf-8&json=1&prod=pc&from=pc_web&wd=${encodeURIComponent(q)}`,
+    parseSuggestions: (raw) => {
+      try {
+        const obj = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        if (!Array.isArray(obj && obj.g)) return [];
+        return obj.g
+          .map((s) => (typeof s === 'object' && s ? s.q : null))
+          .filter(Boolean);
+      } catch (_) {
+        return [];
+      }
+    },
   },
   bing: {
     label: 'BING',
     url: (q) => `https://www.bing.com/search?q=${encodeURIComponent(q)}`,
     iframeFriendly: true,
+    suggestUrl: (q) =>
+      `https://www.bing.com/AS/Suggestions?pt=page.serp&mkt=zh-cn&qry=${encodeURIComponent(q)}&cp=1&cvid=1`,
+    // Bing returns a tiny HTML fragment: <ul class="sa_drw">...<li
+    // class="sa_sg"><span>foo</span>...</li>...</ul>. Pull the visible
+    // text out of every <li>sa_sg>.
+    parseSuggestions: (raw) => {
+      if (typeof raw !== 'string') return [];
+      const out = [];
+      const liRe = /<li\b[^>]*class="[^"]*\bsa_sg\b[^"]*"[^>]*>([\s\S]*?)<\/li>/g;
+      let m;
+      while ((m = liRe.exec(raw)) !== null) {
+        // Strip tags inside the <li> and decode a couple of common
+        // HTML entities that Bing uses (mainly &amp; &lt; &gt;).
+        const text = m[1]
+          .replace(/<[^>]+>/g, '')
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .trim();
+        if (text && !out.includes(text)) out.push(text);
+      }
+      return out;
+    },
   },
   google: {
     label: 'GOOGLE',
     url: (q) => `https://www.google.com/search?q=${encodeURIComponent(q)}`,
     iframeFriendly: true,
+    // Google's autocomplete endpoint requires an HTTP referer from
+    // www.google.com; without it the response is a CAPTCHA. We mark
+    // suggestions disabled so the dropdown stays empty for Google.
+    suggestUrl: null,
+    parseSuggestions: null,
   },
   github: {
     label: 'GITHUB',
     url: (q) => `https://github.com/search?q=${encodeURIComponent(q)}`,
     iframeFriendly: true,
+    suggestUrl: null,
+    parseSuggestions: null,
   },
   wkinfo: {
     label: '威科',
     url: (q) => `https://law.wkinfo.com.cn/legislation/list?simple=${encodeURIComponent(q)}`,
     iframeFriendly: true,
+    suggestUrl: null,
+    parseSuggestions: null,
   },
   bilibili: {
     label: 'BILIBILI',
     url: (q) => `https://search.bilibili.com/all?keyword=${encodeURIComponent(q)}`,
     iframeFriendly: true,
+    suggestUrl: null,
+    parseSuggestions: null,
   },
 };
 
@@ -116,6 +169,7 @@ const DEFAULT_STATE = {
   rainbowMode: 'off',  // 'off' | 'vivid' | 'soft' | 'morandi'
   visibleEngines: null, // null = use default (all engines visible)
   preview: { open: false, url: '', engine: '', query: '' },
+  history: [], // [{ q, engine, ts }], newest first, capped at 30
 };
 
 let state = { ...DEFAULT_STATE };
@@ -565,6 +619,17 @@ function performSearch(e) {
     return;
   }
   const url = engine.url(q);
+  // Record the query in history. suggestions.js exposes the API; if
+  // that script hasn't loaded yet (extremely rare), we still write
+  // directly to state so it survives a reload.
+  if (typeof window.searchSuggestions === 'object' &&
+      typeof window.searchSuggestions.recordHistory === 'function') {
+    window.searchSuggestions.recordHistory(q, state.engine);
+  } else if (Array.isArray(state.history)) {
+    state.history.unshift({ q, engine: state.engine, ts: Date.now() });
+    if (state.history.length > 30) state.history.length = 30;
+    persist();
+  }
   // Some engines (e.g. Baidu) ship a strict
   // `Content-Security-Policy: frame-ancestors` header that excludes
   // `chrome-extension://`. Chromium refuses to render those SERPs in
