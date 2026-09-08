@@ -549,9 +549,30 @@ function performSearch(e) {
   }
   const engine = ENGINES[state.engine];
   window.open(engine.url(q), '_blank', 'noopener');
+  // Keep focus on the input: opening a new tab can briefly steal focus
+  // (especially when the submit button is `type="submit"`), which
+  // interrupts IME composition. Force focus back on the next tick so
+  // the user can keep typing.
+  setTimeout(() => searchInput.focus(), 0);
 }
 
 searchForm.addEventListener('submit', performSearch);
+
+// Block the Enter key while an IME composition is in progress. Without
+// this guard, hitting Enter to confirm a Chinese/Japanese/Korean
+// candidate can trigger implicit form submission, which moves focus
+// to the submit button and breaks the next keystroke.
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  // `isComposing` is true during IME composition (the spec'd signal);
+  // `keyCode === 229` is the legacy Chromium signal for "still
+  // composing". Either one means: do NOT submit.
+  if (e.isComposing || e.keyCode === 229) {
+    e.preventDefault();
+    e.stopPropagation();
+    return;
+  }
+});
 searchBtn.addEventListener('click', performSearch);
 
 // ---------- Settings panel ----------
@@ -572,7 +593,9 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && settingsPanel.classList.contains('open')) {
     closeSettings();
   }
-  if (e.key === '/' && document.activeElement !== searchInput) {
+  // "/" focuses the search box — but never during IME composition,
+  // or we'd swallow the "/" candidate the user is currently typing.
+  if (e.key === '/' && !e.isComposing && e.keyCode !== 229 && document.activeElement !== searchInput) {
     e.preventDefault();
     searchInput.focus();
   }

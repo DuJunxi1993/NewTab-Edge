@@ -320,8 +320,10 @@ body::before {
 .search-panel {
   width: min(640px, 92vw);
   background: var(--surface);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  /* No backdrop-filter: in Chromium, having `backdrop-filter` on a
+     ancestor of a focused input frequently breaks IME composition
+     (focus is lost every time the IME repaints). The translucent
+     `var(--surface)` already gives a frosted-glass look. */
   border: 1px solid var(--border);
   padding: 16px;
   border-radius: var(--radius-xl);
