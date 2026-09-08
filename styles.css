@@ -146,8 +146,9 @@ body::before {
   align-items: center;
   gap: 8px;
   background: var(--surface);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  /* No backdrop-filter: keeps the always-visible HUD out of a separate
+     compositing layer, which would otherwise break IME focus on the
+     search input that lives elsewhere on the page. */
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 6px 12px;
@@ -178,8 +179,7 @@ body::before {
 
 .hud-btn {
   background: var(--surface);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  /* No backdrop-filter — see .hud-status comment. */
   border: 1px solid var(--border);
   color: var(--text-secondary);
   width: 36px;
@@ -218,8 +218,7 @@ body::before {
   letter-spacing: 0.4px;
   color: var(--text-tertiary);
   background: var(--surface);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  /* No backdrop-filter — see .hud-status comment. */
   border: 1px solid var(--border);
   padding: 6px 14px;
   border-radius: var(--radius-pill);
@@ -235,8 +234,7 @@ body::before {
   letter-spacing: 0.5px;
   color: var(--text-secondary);
   background: var(--surface);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  /* No backdrop-filter — see .hud-status comment. */
   border: 1px solid var(--border);
   padding: 6px 14px 6px 12px;
   border-radius: var(--radius-pill);
@@ -799,8 +797,7 @@ html.theme-dark {
   display: grid;
   place-items: center;
   background: var(--surface);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  /* No backdrop-filter — see .hud-status comment. */
   border: 1px solid var(--border);
   color: var(--text-secondary);
   cursor: pointer;
@@ -829,8 +826,7 @@ html.theme-dark {
   letter-spacing: 0.5px;
   color: var(--text-secondary);
   background: var(--surface);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  /* No backdrop-filter — see .hud-status comment. */
   border: 1px solid var(--border);
   padding: 7px 16px;
   border-radius: var(--radius-pill);

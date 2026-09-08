@@ -549,11 +549,10 @@ function performSearch(e) {
   }
   const engine = ENGINES[state.engine];
   window.open(engine.url(q), '_blank', 'noopener');
-  // Keep focus on the input: opening a new tab can briefly steal focus
-  // (especially when the submit button is `type="submit"`), which
-  // interrupts IME composition. Force focus back on the next tick so
-  // the user can keep typing.
-  setTimeout(() => searchInput.focus(), 0);
+  // Do NOT force focus back to the input after submitting — opening a
+  // new tab already triggers Edge's own focus handling, and a forced
+  // refocus races with that, frequently causing IME focus loss. The
+  // user can press `/` (or click the input) to start the next query.
 }
 
 searchForm.addEventListener('submit', performSearch);
@@ -725,7 +724,11 @@ async function init() {
   setSource('url');
   applyTheme();
   applyRainbow();
-  searchInput.focus();
+  // No explicit searchInput.focus() here: the input has the `autofocus`
+  // attribute, which the browser handles at parse time and which
+  // cooperates better with Chromium's new-tab focus model. Calling
+  // .focus() from script runs after the URL bar has already claimed
+  // focus, and can be overridden / lost during async storage reads.
   bindThemeListener();
   bindThemeControls();
   bindRainbowControls();
@@ -740,6 +743,20 @@ async function init() {
     if (typeof window.renderAiPanel === 'function') renderAiPanel();
   }, 250);
 }
+
+// When Edge activates this tab, the omnibox often keeps focus and the
+// `autofocus` on the input is no help (it fires at parse time, not at
+// tab activation). Re-claim focus from the omnibox here, but only when
+// the page hasn't been interacted with yet — never steal focus from a
+// focused element the user intentionally chose.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  // If focus has already settled on a real element inside the page,
+  // do nothing.
+  const ae = document.activeElement;
+  if (ae && ae !== document.body) return;
+  searchInput.focus({ preventScroll: true });
+});
 
 const RAINBOW_PALETTES = {
   vivid:   ['#00e5ff', '#ff2e88', '#ffd60a', '#9dff3c', '#ff7a00', '#b26bff', '#00ff9d'],
