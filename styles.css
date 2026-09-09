@@ -340,7 +340,12 @@ html[data-pattern="radial"] .bg-pattern[data-pattern-layer="radial"] { opacity: 
 /* ===== Main stage ===== */
 .stage {
   position: relative;
-  z-index: 15;
+  /* No z-index here. The stage is a flex container that takes up the
+     viewport, so giving it a z-index would promote it to a stacking
+     layer that paints over the bottom HUD (which lives at the
+     viewport bottom in a fixed-position layer). The title +
+     search-panel that need to be above the background patterns get
+     their own z-indexes individually. */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
