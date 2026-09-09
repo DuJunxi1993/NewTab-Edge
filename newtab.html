@@ -20,6 +20,49 @@
     <div class="wallpaper" id="wallpaper"></div>
   </div>
   <div class="wallpaper-overlay" id="wallpaperOverlay"></div>
+
+  <!-- Geometric line pattern overlays. Three patterns available, each is
+       an inline SVG that fills the viewport. Toggled by adding
+       html[data-pattern="grid" | "topo" | "radial"]. Animated via CSS
+       transforms; speeds kept under 30s/cycle so they never distract.
+       Pointer-events: none so the search row stays clickable. -->
+  <div class="bg-pattern" data-pattern-layer="grid" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <pattern id="grid-pat" width="48" height="48" patternUnits="userSpaceOnUse">
+          <path d="M 48 0 L 0 0 0 48" fill="none" stroke="currentColor" stroke-width="0.6" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grid-pat)" />
+    </svg>
+  </div>
+  <div class="bg-pattern" data-pattern-layer="topo" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <pattern id="topo-pat" width="240" height="240" patternUnits="userSpaceOnUse">
+          <path d="M 0 60 Q 60 30 120 60 T 240 60" fill="none" stroke="currentColor" stroke-width="0.7" />
+          <path d="M 0 100 Q 60 70 120 100 T 240 100" fill="none" stroke="currentColor" stroke-width="0.7" />
+          <path d="M 0 140 Q 60 110 120 140 T 240 140" fill="none" stroke="currentColor" stroke-width="0.7" />
+          <path d="M 0 180 Q 60 150 120 180 T 240 180" fill="none" stroke="currentColor" stroke-width="0.7" />
+          <path d="M 0 220 Q 60 190 120 220 T 240 220" fill="none" stroke="currentColor" stroke-width="0.7" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#topo-pat)" />
+    </svg>
+  </div>
+  <div class="bg-pattern" data-pattern-layer="radial" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <pattern id="radial-pat" width="120" height="120" patternUnits="userSpaceOnUse">
+          <circle cx="60" cy="60" r="20" fill="none" stroke="currentColor" stroke-width="0.6" />
+          <circle cx="60" cy="60" r="40" fill="none" stroke="currentColor" stroke-width="0.6" />
+          <circle cx="60" cy="60" r="60" fill="none" stroke="currentColor" stroke-width="0.6" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#radial-pat)" />
+    </svg>
+  </div>
+
   <div class="scanlines"></div>
   <div class="vignette"></div>
 
@@ -182,7 +225,13 @@
           <div class="hint">标题逐字着色 · 引擎按钮彩色 · 搜索按钮渐变</div>
         </div>
 
-        
+        <!-- Background pattern -->
+        <div class="setting-group">
+          <label class="setting-label">BG PATTERN // 背景图案</label>
+          <div class="segmented" id="bgPatternPicker"></div>
+          <div class="hint">细线几何图案 · 不喧宾夺主</div>
+        </div>
+
         <!-- Custom title -->
         <div class="setting-group">
           <div class="slider-row">

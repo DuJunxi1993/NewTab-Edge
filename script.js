@@ -56,9 +56,18 @@
 
 // ---------- Built-in wallpapers (local presets + royalty-free Unsplash) ----------
 const BUILTIN_WALLPAPERS = [
+  // Solid color presets (theme-aware: the cssVar is set per theme)
   { id: 'edge-solid', type: 'color', cssVar: '--edge-solid-color', label: 'Edge Surface' },
   { id: 'edge-cream', type: 'color', cssVar: '--edge-cream-color', label: 'Warm Paper' },
   { id: 'edge-pure',  type: 'color', cssVar: '--edge-pure-color',  label: 'Pure White' },
+  // Gradient presets. cssVar is a CSS variable that each theme exposes
+  // with light + dark variants; applyWallpaper reads it.
+  { id: 'aurora', type: 'gradient', cssVar: '--wp-aurora', label: 'Aurora' },
+  { id: 'sunset', type: 'gradient', cssVar: '--wp-sunset', label: 'Sunset' },
+  { id: 'ocean',  type: 'gradient', cssVar: '--wp-ocean',  label: 'Ocean' },
+  { id: 'forest', type: 'gradient', cssVar: '--wp-forest', label: 'Forest' },
+  { id: 'mono',   type: 'gradient', cssVar: '--wp-mono',   label: 'Mono' },
+  { id: 'cyber',  type: 'gradient', cssVar: '--wp-cyber',  label: 'Cyber' },
 ];
 
 // ---------- Search engines ----------
@@ -207,6 +216,7 @@ const DEFAULT_STATE = {
   visibleEngines: null, // null = use default (all engines visible)
   preview: { open: false, url: '', engine: '', query: '' },
   history: [], // [{ q, engine, ts }], newest first, capped at 30
+  bgPattern: 'off', // 'off' | 'grid' | 'topo' | 'radial'
 };
 
 let state = { ...DEFAULT_STATE };
@@ -294,6 +304,8 @@ tickClock();
 function applyWallpaper() {
   let url = '';
   let isColor = false;
+  let isGradient = false;
+  let gradientValue = '';
   if (state.wallpaper.type === 'color') {
     url = state.wallpaper.value;
     isColor = true;
@@ -309,6 +321,9 @@ function applyWallpaper() {
         const cssColor = resolveColorFromCss(found.cssVar);
         url = cssColor || found.url || '';
         isColor = true;
+      } else if (found.type === 'gradient' && found.cssVar) {
+        gradientValue = resolveColorFromCss(found.cssVar) || '';
+        isGradient = !!gradientValue;
       } else {
         url = found.url;
       }
@@ -317,6 +332,9 @@ function applyWallpaper() {
   if (isColor) {
     wallpaperEl.style.backgroundImage = 'none';
     wallpaperEl.style.backgroundColor = url;
+  } else if (isGradient) {
+    wallpaperEl.style.backgroundImage = gradientValue;
+    wallpaperEl.style.backgroundColor = 'transparent';
   } else if (url) {
     wallpaperEl.style.backgroundColor = 'transparent';
     wallpaperEl.style.backgroundImage = `url("${url}")`;
@@ -377,6 +395,11 @@ function renderBuiltinGrid() {
       div.style.backgroundImage = 'none';
       const cssColor = w.cssVar ? resolveColorFromCss(w.cssVar) : w.url;
       div.style.backgroundColor = cssColor || w.url;
+    } else if (w.type === 'gradient' && w.cssVar) {
+      // Resolve the live CSS variable so the swatch reflects the
+      // currently-selected theme.
+      div.style.backgroundImage = resolveColorFromCss(w.cssVar) || '';
+      div.style.backgroundColor = 'transparent';
     } else {
       div.style.backgroundImage = `url("${w.url}")`;
     }
@@ -773,6 +796,9 @@ resetBtn.addEventListener('click', () => {
   setSource('url');
   applyTheme();
   applyRainbow();
+  state.bgPattern = 'off';
+  applyBgPattern();
+  renderBgPatternPicker();
   persist();
   toast('Settings reset');
 });
@@ -888,6 +914,8 @@ async function init() {
   setSource('url');
   applyTheme();
   applyRainbow();
+  applyBgPattern();
+  renderBgPatternPicker();
   // No explicit searchInput.focus() here: the input has the `autofocus`
   // attribute, which the browser handles at parse time and which
   // cooperates better with Chromium's new-tab focus model. Calling
@@ -1091,6 +1119,50 @@ function setAccentOverride(hex) {
   }
   applyTheme();
   persist();
+}
+
+function setBgPattern(id) {
+  const allowed = ['off', 'grid', 'topo', 'radial'];
+  if (!allowed.includes(id)) return;
+  state.bgPattern = id;
+  applyBgPattern();
+  persist();
+}
+
+function applyBgPattern() {
+  const html = document.documentElement;
+  if (state.bgPattern && state.bgPattern !== 'off') {
+    html.setAttribute('data-pattern', state.bgPattern);
+  } else {
+    html.removeAttribute('data-pattern');
+  }
+  // Sync the segmented buttons in the settings panel (added by
+  // renderBgPatternPicker).
+  document.querySelectorAll('[data-pattern-pick]').forEach((el) => {
+    el.classList.toggle('active', el.dataset.patternPick === (state.bgPattern || 'off'));
+  });
+}
+
+function renderBgPatternPicker() {
+  const root = document.getElementById('bgPatternPicker');
+  if (!root) return;
+  root.innerHTML = '';
+  const items = [
+    { id: 'off',    label: 'OFF' },
+    { id: 'grid',   label: 'GRID' },
+    { id: 'topo',   label: 'TOPO' },
+    { id: 'radial', label: 'RADIAL' },
+  ];
+  items.forEach((it) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'seg-btn';
+    b.dataset.patternPick = it.id;
+    b.textContent = it.label;
+    if ((state.bgPattern || 'off') === it.id) b.classList.add('active');
+    b.addEventListener('click', () => setBgPattern(it.id));
+    root.appendChild(b);
+  });
 }
 
 function renderThemePicker() {

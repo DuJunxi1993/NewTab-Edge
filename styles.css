@@ -79,7 +79,21 @@ html, body {
   font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Lines / fade colours for the optional geometric BG pattern. */
+  --bg-pattern-color: rgba(0, 0, 0, 0.85);
+  --bg-pattern-fade-top: rgba(255, 255, 255, 0.50);
+  --bg-pattern-fade-bottom: rgba(255, 255, 255, 0.50);
 }
+
+/* Dark themes need a light-coloured pattern line; high-contrast is
+   even brighter. Pure Light uses a subtle mid-grey. */
+html.theme-edge-dark   { --bg-pattern-color: rgba(255, 255, 255, 0.55); --bg-pattern-fade-top: rgba(0, 0, 0, 0.30); --bg-pattern-fade-bottom: rgba(0, 0, 0, 0.30); }
+html.theme-pure-light  { --bg-pattern-color: rgba(60, 60, 70, 0.55); }
+html.theme-sepia       { --bg-pattern-color: rgba(120, 80, 30, 0.55); --bg-pattern-fade-top: rgba(245, 230, 200, 0.40); --bg-pattern-fade-bottom: rgba(245, 230, 200, 0.40); }
+html.theme-solarized   { --bg-pattern-color: rgba(7, 54, 66, 0.55); }
+html.theme-slate       { --bg-pattern-color: rgba(255, 255, 255, 0.45); }
+html.theme-rosepine    { --bg-pattern-color: rgba(235, 188, 186, 0.40); }
+html.theme-high-contrast { --bg-pattern-color: rgba(255, 255, 255, 0.80); }
 
 /* ===== Default Win 11-style gradient backdrop ===== */
 body::before {
@@ -119,6 +133,57 @@ body::before {
   background: transparent;
   z-index: -1;
   pointer-events: none;
+}
+
+/* ----- Geometric line pattern overlay -----
+   Three SVG patterns stacked behind everything but above the
+   wallpaper. The active pattern is selected by the
+   `data-pattern="<id>"` attribute on <html> (script.js toggles
+   it). Default state is no pattern (data-pattern omitted). */
+.bg-pattern {
+  position: fixed;
+  inset: -10vmax;
+  z-index: -2; /* above wallpaper (-3), below overlay (-1) */
+  pointer-events: none;
+  color: var(--bg-pattern-color);
+  opacity: 0; /* hidden by default; html[data-pattern="<id>"] turns it on */
+  transition: opacity 0.4s ease;
+}
+.bg-pattern svg {
+  width: 100%;
+  height: 100%;
+}
+/* Soft top/bottom fade so the pattern doesn't fight HUD chrome. */
+.bg-pattern::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg,
+      var(--bg-pattern-fade-top, transparent) 0%,
+      transparent 18%,
+      transparent 82%,
+      var(--bg-pattern-fade-bottom, transparent) 100%);
+  pointer-events: none;
+}
+
+/* Per-pattern opacity. Keyed to html[data-pattern]. */
+html[data-pattern="grid"]   .bg-pattern[data-pattern-layer="grid"]   { opacity: 0.055; animation: patternDrift1 38s ease-in-out infinite alternate; }
+html[data-pattern="topo"]   .bg-pattern[data-pattern-layer="topo"]   { opacity: 0.075; animation: patternDrift2 46s ease-in-out infinite alternate; }
+html[data-pattern="radial"] .bg-pattern[data-pattern-layer="radial"] { opacity: 0.060; animation: patternPulse 28s ease-in-out infinite; }
+
+/* Slow drift animations — well under 1% per second, never distract. */
+@keyframes patternDrift1 {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(-2.5%, 1.5%); }
+}
+@keyframes patternDrift2 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(1.5%, -1.2%) scale(1.02); }
+}
+@keyframes patternPulse {
+  0%, 100% { transform: scale(1); opacity: 0.060; }
+  50%      { transform: scale(1.03); opacity: 0.075; }
 }
 
 /* Hide cyberpunk overlays — Edge style doesn't use them */
@@ -1097,6 +1162,76 @@ html.theme-high-contrast {
   --hud-highlight: rgba(255, 255, 255, 0.20);
   --panel-corner-accent: #ffffff;
 }
+
+/* ================================================
+   Wallpaper gradients — each preset exposes --wp-<id>.
+   A separate variable per preset (rather than reusing
+   --bg-gradient) so the user can pick a theme gradient
+   independently of the chosen accent palette.
+
+   Variables use color-mix to dim dark variants, no need
+   for separate light/dark blocks.
+   ================================================ */
+
+/* Aurora (already lives in --bg-gradient of edge-blue; share it) */
+html.theme-edge-blue   { --wp-aurora: linear-gradient(135deg, #93bbf7 0%, #b794f4 50%, #ed87d6 100%); }
+html.theme-edge-dark   { --wp-aurora: linear-gradient(135deg, #2a2a5e 0%, #5a3a8a 50%, #8a3a8a 100%); }
+html.theme-pure-light  { --wp-aurora: linear-gradient(135deg, #f0f4ff 0%, #f5f0ff 50%, #fff0fa 100%); }
+html.theme-sepia       { --wp-aurora: linear-gradient(135deg, #f5e6c8 0%, #ead8b4 50%, #d9c391 100%); }
+html.theme-solarized   { --wp-aurora: linear-gradient(135deg, #b8d8c0 0%, #d4b8c0 50%, #d8b8c0 100%); }
+html.theme-slate       { --wp-aurora: linear-gradient(135deg, #2c2f3a 0%, #3a3d4a 50%, #46485a 100%); }
+html.theme-rosepine    { --wp-aurora: linear-gradient(135deg, #2a2540 0%, #403855 50%, #5a4868 100%); }
+html.theme-high-contrast { --wp-aurora: linear-gradient(135deg, #202028 0%, #303040 50%, #404050 100%); }
+
+/* Sunset */
+html.theme-edge-blue   { --wp-sunset: linear-gradient(135deg, #ffd1a8 0%, #ffa6c1 50%, #a78bfa 100%); }
+html.theme-edge-dark   { --wp-sunset: linear-gradient(135deg, #4a2030 0%, #6a2848 50%, #4a2068 100%); }
+html.theme-pure-light  { --wp-sunset: linear-gradient(135deg, #ffe4d0 0%, #ffc8d8 50%, #d4c8ec 100%); }
+html.theme-sepia       { --wp-sunset: linear-gradient(135deg, #f0c8a0 0%, #d8a898 50%, #b8a888 100%); }
+html.theme-solarized   { --wp-sunset: linear-gradient(135deg, #f0d8b8 0%, #e8a8b8 50%, #b8a0c0 100%); }
+html.theme-slate       { --wp-sunset: linear-gradient(135deg, #3a2a30 0%, #5a3a48 50%, #4a3a58 100%); }
+html.theme-rosepine    { --wp-sunset: linear-gradient(135deg, #3a2a3a 0%, #5a3a4a 50%, #4a3a5a 100%); }
+html.theme-high-contrast { --wp-sunset: linear-gradient(135deg, #3a2028 0%, #5a3038 50%, #4a3848 100%); }
+
+/* Ocean */
+html.theme-edge-blue   { --wp-ocean:  linear-gradient(135deg, #b8d8f0 0%, #5d9bc1 50%, #1f3a5c 100%); }
+html.theme-edge-dark   { --wp-ocean:  linear-gradient(135deg, #0a1a30 0%, #0f2a44 50%, #122a4a 100%); }
+html.theme-pure-light  { --wp-ocean:  linear-gradient(135deg, #d0e0f0 0%, #a0c0d8 50%, #6088a8 100%); }
+html.theme-sepia       { --wp-ocean:  linear-gradient(135deg, #c8d8d0 0%, #a0b0b0 50%, #808888 100%); }
+html.theme-solarized   { --wp-ocean:  linear-gradient(135deg, #b8d0d8 0%, #80a8b8 50%, #5088a8 100%); }
+html.theme-slate       { --wp-ocean:  linear-gradient(135deg, #1a2a3a 0%, #203848 50%, #284858 100%); }
+html.theme-rosepine    { --wp-ocean:  linear-gradient(135deg, #1a2030 0%, #203848 50%, #284858 100%); }
+html.theme-high-contrast { --wp-ocean:  linear-gradient(135deg, #001020 0%, #102838 50%, #183848 100%); }
+
+/* Forest */
+html.theme-edge-blue   { --wp-forest: linear-gradient(135deg, #d4e9c8 0%, #7eb87e 50%, #2f5a3a 100%); }
+html.theme-edge-dark   { --wp-forest: linear-gradient(135deg, #0e1f15 0%, #1a3022 50%, #243a2c 100%); }
+html.theme-pure-light  { --wp-forest: linear-gradient(135deg, #e0e8d8 0%, #a8c8a8 50%, #689868 100%); }
+html.theme-sepia       { --wp-forest: linear-gradient(135deg, #c8c8a8 0%, #888878 50%, #586848 100%); }
+html.theme-solarized   { --wp-forest: linear-gradient(135deg, #b8c898 0%, #78a878 50%, #487858 100%); }
+html.theme-slate       { --wp-forest: linear-gradient(135deg, #1a2818 0%, #243828 50%, #2c4838 100%); }
+html.theme-rosepine    { --wp-forest: linear-gradient(135deg, #1a2820 0%, #243828 50%, #2c4838 100%); }
+html.theme-high-contrast { --wp-forest: linear-gradient(135deg, #001808 0%, #102818 50%, #183828 100%); }
+
+/* Mono */
+html.theme-edge-blue   { --wp-mono:   linear-gradient(135deg, #ffffff 0%, #d4d4d8 50%, #6f6f76 100%); }
+html.theme-edge-dark   { --wp-mono:   linear-gradient(135deg, #0a0a0c 0%, #1c1c20 50%, #404048 100%); }
+html.theme-pure-light  { --wp-mono:   linear-gradient(135deg, #fafafa 0%, #c0c0c4 50%, #404048 100%); }
+html.theme-sepia       { --wp-mono:   linear-gradient(135deg, #efe1c5 0%, #c8b898 50%, #886848 100%); }
+html.theme-solarized   { --wp-mono:   linear-gradient(135deg, #fdf6e3 0%, #b8b0a8 50%, #586c78 100%); }
+html.theme-slate       { --wp-mono:   linear-gradient(135deg, #1c1f24 0%, #2c3038 50%, #4c5058 100%); }
+html.theme-rosepine    { --wp-mono:   linear-gradient(135deg, #21202e 0%, #403a52 50%, #605878 100%); }
+html.theme-high-contrast { --wp-mono:   linear-gradient(135deg, #000000 0%, #1c1c1c 50%, #404040 100%); }
+
+/* Cyber (致敬原版) */
+html.theme-edge-blue   { --wp-cyber:  linear-gradient(135deg, #fff5e1 0%, #ff89e1 45%, #5d8bff 100%); }
+html.theme-edge-dark   { --wp-cyber:  linear-gradient(135deg, #050510 0%, #1a0a2a 45%, #001a3a 100%); }
+html.theme-pure-light  { --wp-cyber:  linear-gradient(135deg, #ffffff 0%, #ffd8f0 45%, #d8e0ff 100%); }
+html.theme-sepia       { --wp-cyber:  linear-gradient(135deg, #f5e6c8 0%, #d8a8b8 45%, #a8b8c8 100%); }
+html.theme-solarized   { --wp-cyber:  linear-gradient(135deg, #fdf6e3 0%, #d8a8c8 45%, #98b8d8 100%); }
+html.theme-slate       { --wp-cyber:  linear-gradient(135deg, #0a0a14 0%, #2a1a3a 45%, #1a2a4a 100%); }
+html.theme-rosepine    { --wp-cyber:  linear-gradient(135deg, #191724 0%, #3a284a 45%, #2a3858 100%); }
+html.theme-high-contrast { --wp-cyber:  linear-gradient(135deg, #000000 0%, #200818 45%, #102848 100%); }
 
 /* ===== Auto: respect OS dark, unless user explicitly chose LIGHT ===== */
 @media (prefers-color-scheme: dark) {
