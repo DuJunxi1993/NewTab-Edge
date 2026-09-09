@@ -698,8 +698,186 @@ body::before {
 
 
 
-/* ===== Manual override: force dark via class on <html> ===== */
-html.theme-dark {
+/* ================================================
+   Theme presets — driven by .theme-<id> on <html>.
+
+   The :root block defines the DEFAULT palette (Edge Blue, light).
+   Every other preset sets the same variable set, fully overriding.
+
+   Accent override is layered on top of any preset via the
+   `--accent-override` custom property set by script.js on the
+   <html> element. We use a CSS @supports-like trick: every rule that
+   defines --accent is followed by a duplicate that consults the
+   override if present.
+
+   Wallpaper solid presets (--edge-solid-color etc.) are mirrored to
+   a darker shade under each dark preset.
+   ================================================ */
+
+/* ----- Edge Blue (light) — default ----- */
+html.theme-edge-blue {
+  --accent: #0067c0;
+  --accent-hover: #0078d4;
+  --accent-pressed: #005ba1;
+  --accent-light: rgba(0, 103, 192, 0.12);
+  --danger: #d13438;
+
+  --bg-gradient: linear-gradient(135deg, #93bbf7 0%, #b794f4 50%, #ed87d6 100%);
+  --surface: rgba(255, 255, 255, 0.65);
+  --surface-solid: #ffffff;
+  --surface-hover: rgba(0, 0, 0, 0.04);
+  --surface-pressed: rgba(0, 0, 0, 0.08);
+
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.14);
+
+  --text-primary: #1c1c1c;
+  --text-secondary: #5d5d5d;
+  --text-tertiary: #8a8a8a;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05), 0 2px 6px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.10), 0 16px 32px rgba(0, 0, 0, 0.12);
+
+  --edge-solid-color: #f3f3f3;
+  --edge-cream-color: #f8f4f1;
+  --edge-pure-color:  #ffffff;
+
+  --title-text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.30),
+    0 4px 10px rgba(0, 0, 0, 0.22),
+    0 16px 32px rgba(0, 0, 0, 0.16),
+    0 0 12px rgba(255, 255, 255, 0.60);
+  --subtitle-text-shadow:
+    0 0 10px rgba(255, 255, 255, 0.80),
+    0 1px 2px rgba(0, 0, 0, 0.15);
+
+  --hud-highlight: rgba(255, 255, 255, 0.55);
+  --panel-corner-accent: var(--accent);
+}
+
+/* ----- Pure Light — minimal / paper white ----- */
+html.theme-pure-light {
+  --accent: #1f1f1f;
+  --accent-hover: #000000;
+  --accent-pressed: #3a3a3a;
+  --accent-light: rgba(0, 0, 0, 0.06);
+  --danger: #b42318;
+
+  --bg-gradient: linear-gradient(135deg, #ffffff 0%, #fafafa 50%, #f3f3f3 100%);
+  --surface: rgba(255, 255, 255, 0.80);
+  --surface-solid: #ffffff;
+  --surface-hover: rgba(0, 0, 0, 0.04);
+  --surface-pressed: rgba(0, 0, 0, 0.08);
+
+  --border: rgba(0, 0, 0, 0.06);
+  --border-strong: rgba(0, 0, 0, 0.12);
+
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --text-tertiary: #888888;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 6px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.05), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.08), 0 16px 32px rgba(0, 0, 0, 0.10);
+
+  --edge-solid-color: #ffffff;
+  --edge-cream-color: #fafafa;
+  --edge-pure-color:  #ffffff;
+
+  --title-text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.18),
+    0 4px 10px rgba(0, 0, 0, 0.10),
+    0 0 8px rgba(255, 255, 255, 0.80);
+  --subtitle-text-shadow:
+    0 1px 2px rgba(255, 255, 255, 0.85);
+
+  --hud-highlight: rgba(255, 255, 255, 0.80);
+  --panel-corner-accent: rgba(0, 0, 0, 0.18);
+}
+
+/* ----- Sepia — warm paper ----- */
+html.theme-sepia {
+  --accent: #8a5a2b;
+  --accent-hover: #a06b35;
+  --accent-pressed: #6f4720;
+  --accent-light: rgba(138, 90, 43, 0.10);
+  --danger: #b14747;
+
+  --bg-gradient: linear-gradient(135deg, #f5e6c8 0%, #ead8b4 50%, #d9c391 100%);
+  --surface: rgba(245, 235, 215, 0.75);
+  --surface-solid: #f5ebd7;
+  --surface-hover: rgba(90, 60, 30, 0.06);
+  --surface-pressed: rgba(90, 60, 30, 0.10);
+
+  --border: rgba(110, 75, 35, 0.14);
+  --border-strong: rgba(110, 75, 35, 0.22);
+
+  --text-primary: #3a2a18;
+  --text-secondary: #6b4f30;
+  --text-tertiary: #97785a;
+
+  --shadow-sm: 0 1px 2px rgba(80, 50, 20, 0.06), 0 2px 6px rgba(80, 50, 20, 0.04);
+  --shadow-md: 0 4px 8px rgba(80, 50, 20, 0.10), 0 8px 24px rgba(80, 50, 20, 0.08);
+  --shadow-lg: 0 8px 16px rgba(80, 50, 20, 0.12), 0 16px 32px rgba(80, 50, 20, 0.10);
+
+  --edge-solid-color: #efe1c5;
+  --edge-cream-color: #f5e9cf;
+  --edge-pure-color:  #fbf3df;
+
+  --title-text-shadow:
+    0 1px 2px rgba(80, 50, 20, 0.30),
+    0 4px 10px rgba(80, 50, 20, 0.18),
+    0 0 8px rgba(245, 230, 200, 0.80);
+  --subtitle-text-shadow:
+    0 1px 2px rgba(245, 230, 200, 0.80);
+
+  --hud-highlight: rgba(255, 240, 210, 0.60);
+  --panel-corner-accent: rgba(138, 90, 43, 0.30);
+}
+
+/* ----- Solarized Light ----- */
+html.theme-solarized {
+  --accent: #268bd2;
+  --accent-hover: #2aa198;
+  --accent-pressed: #1e6ea8;
+  --accent-light: rgba(38, 139, 210, 0.10);
+  --danger: #dc322f;
+
+  --bg-gradient: linear-gradient(135deg, #fdf6e3 0%, #eee8d5 50%, #e0dcc7 100%);
+  --surface: rgba(253, 246, 227, 0.75);
+  --surface-solid: #fdf6e3;
+  --surface-hover: rgba(7, 54, 66, 0.05);
+  --surface-pressed: rgba(7, 54, 66, 0.09);
+
+  --border: rgba(7, 54, 66, 0.10);
+  --border-strong: rgba(7, 54, 66, 0.20);
+
+  --text-primary: #073642;
+  --text-secondary: #586e75;
+  --text-tertiary: #93a1a1;
+
+  --shadow-sm: 0 1px 2px rgba(7, 54, 66, 0.06), 0 2px 6px rgba(7, 54, 66, 0.04);
+  --shadow-md: 0 4px 8px rgba(7, 54, 66, 0.08), 0 8px 24px rgba(7, 54, 66, 0.06);
+  --shadow-lg: 0 8px 16px rgba(7, 54, 66, 0.10), 0 16px 32px rgba(7, 54, 66, 0.10);
+
+  --edge-solid-color: #eee8d5;
+  --edge-cream-color: #f4ecd0;
+  --edge-pure-color:  #fdf6e3;
+
+  --title-text-shadow:
+    0 1px 2px rgba(7, 54, 66, 0.30),
+    0 4px 10px rgba(7, 54, 66, 0.18),
+    0 0 8px rgba(253, 246, 227, 0.80);
+  --subtitle-text-shadow:
+    0 1px 2px rgba(253, 246, 227, 0.85);
+
+  --hud-highlight: rgba(253, 246, 227, 0.65);
+  --panel-corner-accent: var(--accent);
+}
+
+/* ----- Edge Dark ----- */
+html.theme-edge-dark {
   --accent: #4cc2ff;
   --accent-hover: #62cafe;
   --accent-pressed: #3aa6e3;
@@ -707,7 +885,6 @@ html.theme-dark {
   --danger: #ff99a4;
 
   --bg-gradient: linear-gradient(135deg, #1e1e3a 0%, #2d2540 50%, #1a1a2e 100%);
-
   --surface: rgba(44, 44, 44, 0.72);
   --surface-solid: #2c2c2c;
   --surface-hover: rgba(255, 255, 255, 0.06);
@@ -718,7 +895,7 @@ html.theme-dark {
 
   --text-primary: #ffffff;
   --text-secondary: #c5c5c5;
-  --text-tertiary: #8a8a8a;
+  --text-tertiary: #a0a0a0;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24), 0 2px 6px rgba(0, 0, 0, 0.20);
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.30), 0 8px 24px rgba(0, 0, 0, 0.40);
@@ -736,11 +913,131 @@ html.theme-dark {
   --subtitle-text-shadow:
     0 0 10px rgba(0, 0, 0, 0.85),
     0 1px 2px rgba(0, 0, 0, 0.45);
+
+  --hud-highlight: rgba(255, 255, 255, 0.06);
+  --panel-corner-accent: var(--accent);
+}
+
+/* ----- Slate — neutral grey dark ----- */
+html.theme-slate {
+  --accent: #b0b8c1;
+  --accent-hover: #c4ccd5;
+  --accent-pressed: #98a0a9;
+  --accent-light: rgba(176, 184, 193, 0.14);
+  --danger: #d97076;
+
+  --bg-gradient: linear-gradient(135deg, #1c1f24 0%, #232830 50%, #1a1d22 100%);
+  --surface: rgba(36, 40, 48, 0.72);
+  --surface-solid: #242832;
+  --surface-hover: rgba(255, 255, 255, 0.05);
+  --surface-pressed: rgba(255, 255, 255, 0.08);
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  --text-primary: #e6e8eb;
+  --text-secondary: #aab0b8;
+  --text-tertiary: #7e848c;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.28), 0 2px 6px rgba(0, 0, 0, 0.22);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.34), 0 8px 24px rgba(0, 0, 0, 0.42);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.40), 0 16px 32px rgba(0, 0, 0, 0.48);
+
+  --edge-solid-color: #242832;
+  --edge-cream-color: #262a30;
+  --edge-pure-color:  #1c1f24;
+
+  --title-text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.60),
+    0 8px 22px rgba(0, 0, 0, 0.45),
+    0 0 12px rgba(255, 255, 255, 0.06);
+  --subtitle-text-shadow:
+    0 0 10px rgba(0, 0, 0, 0.85);
+
+  --hud-highlight: rgba(255, 255, 255, 0.05);
+  --panel-corner-accent: rgba(176, 184, 193, 0.45);
+}
+
+/* ----- Rosé Pine (muted pink / mauve dark) ----- */
+html.theme-rosepine {
+  --accent: #ebbcba;
+  --accent-hover: #f0c4c2;
+  --accent-pressed: #d9a8a6;
+  --accent-light: rgba(235, 188, 186, 0.14);
+  --danger: #eb6f92;
+
+  --bg-gradient: linear-gradient(135deg, #191724 0%, #1f1c2e 50%, #26233a 100%);
+  --surface: rgba(33, 30, 47, 0.72);
+  --surface-solid: #21202e;
+  --surface-hover: rgba(255, 255, 255, 0.05);
+  --surface-pressed: rgba(255, 255, 255, 0.09);
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  --text-primary: #e0def4;
+  --text-secondary: #908caa;
+  --text-tertiary: #6e6a86;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.30), 0 2px 6px rgba(0, 0, 0, 0.22);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.36), 0 8px 24px rgba(0, 0, 0, 0.42);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.42), 0 16px 32px rgba(0, 0, 0, 0.48);
+
+  --edge-solid-color: #21202e;
+  --edge-cream-color: #1f1d2e;
+  --edge-pure-color:  #191724;
+
+  --title-text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.55),
+    0 8px 24px rgba(0, 0, 0, 0.40),
+    0 0 10px rgba(235, 188, 186, 0.18);
+  --subtitle-text-shadow:
+    0 0 8px rgba(0, 0, 0, 0.80);
+
+  --hud-highlight: rgba(235, 188, 186, 0.05);
+  --panel-corner-accent: var(--accent);
+}
+
+/* ----- High Contrast (WCAG AAA) ----- */
+html.theme-high-contrast {
+  --accent: #ffffff;
+  --accent-hover: #ffffff;
+  --accent-pressed: #e0e0e0;
+  --accent-light: rgba(255, 255, 255, 0.20);
+  --danger: #ff5555;
+
+  --bg-gradient: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+  --surface: rgba(0, 0, 0, 0.90);
+  --surface-solid: #000000;
+  --surface-hover: rgba(255, 255, 255, 0.12);
+  --surface-pressed: rgba(255, 255, 255, 0.18);
+
+  --border: rgba(255, 255, 255, 0.50);
+  --border-strong: rgba(255, 255, 255, 0.85);
+
+  --text-primary: #ffffff;
+  --text-secondary: #f0f0f0;
+  --text-tertiary: #c8c8c8;
+
+  --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.30);
+  --shadow-md: 0 0 0 2px rgba(255, 255, 255, 0.40);
+  --shadow-lg: 0 0 0 3px rgba(255, 255, 255, 0.50);
+
+  --edge-solid-color: #000000;
+  --edge-cream-color: #000000;
+  --edge-pure-color:  #000000;
+
+  --title-text-shadow: 0 0 12px rgba(255, 255, 255, 0.45);
+  --subtitle-text-shadow: 0 0 8px rgba(255, 255, 255, 0.30);
+
+  --hud-highlight: rgba(255, 255, 255, 0.20);
+  --panel-corner-accent: #ffffff;
 }
 
 /* ===== Auto: respect OS dark, unless user explicitly chose LIGHT ===== */
 @media (prefers-color-scheme: dark) {
   :root:not(.theme-light) {
+    /* Default to edge-dark if no explicit preset class is set */
     --accent: #4cc2ff;
     --accent-hover: #62cafe;
     --accent-pressed: #3aa6e3;
@@ -748,7 +1045,6 @@ html.theme-dark {
     --danger: #ff99a4;
 
     --bg-gradient: linear-gradient(135deg, #1e1e3a 0%, #2d2540 50%, #1a1a2e 100%);
-
     --surface: rgba(44, 44, 44, 0.72);
     --surface-solid: #2c2c2c;
     --surface-hover: rgba(255, 255, 255, 0.06);
@@ -759,7 +1055,7 @@ html.theme-dark {
 
     --text-primary: #ffffff;
     --text-secondary: #c5c5c5;
-    --text-tertiary: #8a8a8a;
+    --text-tertiary: #a0a0a0;
 
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24), 0 2px 6px rgba(0, 0, 0, 0.20);
     --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.30), 0 8px 24px rgba(0, 0, 0, 0.40);
@@ -777,8 +1073,18 @@ html.theme-dark {
     --subtitle-text-shadow:
       0 0 10px rgba(0, 0, 0, 0.85),
       0 1px 2px rgba(0, 0, 0, 0.45);
+
+    --hud-highlight: rgba(255, 255, 255, 0.06);
+    --panel-corner-accent: var(--accent);
   }
 }
+
+/* ================================================
+   Accent override — applied via inline styles on <html>
+   by script.js. The override wins over any preset's
+   --accent because inline styles have higher specificity
+   than class-based selectors.
+   ================================================ */
 
 
 /* ================================================

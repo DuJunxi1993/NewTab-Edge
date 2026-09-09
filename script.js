@@ -157,6 +157,39 @@ const ENGINES = {
 // Display order for both the main tab strip and the settings picker
 const ENGINE_ORDER = ['baidu', 'bing', 'google', 'github', 'wkinfo', 'bilibili'];
 
+// ---------- Theme presets ----------
+// Each preset is a single source of truth for the page palette. The
+// CSS side declares them as `html.theme-<id>` blocks; the JS side
+// applies the matching class and (optionally) an `--accent-override`
+// value for user-chosen accent colors.
+//
+// mode: 'light' | 'dark' — drives dark-mode override logic for the
+//        wallpaper pickers and `prefers-color-scheme` fallback.
+// family: 'standard' | 'paper' | 'muted' | 'hc' — coarse grouping for
+//          the settings panel UI.
+const THEME_PRESETS = [
+  { id: 'edge-blue',   label: 'Edge Blue',  mode: 'light', family: 'standard' },
+  { id: 'edge-dark',   label: 'Edge Dark',  mode: 'dark',  family: 'standard' },
+  { id: 'pure-light',  label: 'Pure Light', mode: 'light', family: 'paper' },
+  { id: 'sepia',       label: 'Sepia',      mode: 'light', family: 'paper' },
+  { id: 'slate',       label: 'Slate',      mode: 'dark',  family: 'muted' },
+  { id: 'high-contrast', label: 'High Contrast', mode: 'dark', family: 'hc' },
+  { id: 'solarized',   label: 'Solarized',  mode: 'light', family: 'paper' },
+  { id: 'rosepine',    label: 'Rosé Pine',  mode: 'dark',  family: 'muted' },
+];
+
+// Accent color presets — used by the color picker. Each is paired with
+// a foreground-friendly text color for the swatch chip itself.
+const ACCENT_SWATCHES = [
+  { id: 'edge-blue', value: '#0067c0' },
+  { id: 'cyan',      value: '#00b7c3' },
+  { id: 'violet',    value: '#7c3aed' },
+  { id: 'pink',      value: '#ec4899' },
+  { id: 'rose',      value: '#fb7299' },
+  { id: 'amber',     value: '#d97706' },
+  { id: 'lime',      value: '#65a30d' },
+];
+
 // ---------- State ----------
 const DEFAULT_STATE = {
   wallpaper: { type: 'builtin', value: BUILTIN_WALLPAPERS[0].id },
@@ -164,7 +197,11 @@ const DEFAULT_STATE = {
   brightness: 100,
   saturation: 100,
   engine: 'baidu',
+  // Legacy field kept for backward compatibility. New code reads
+  // `themeId`; this is only consulted at migration time.
   themeMode: 'auto',  // 'auto' | 'light' | 'dark'
+  themeId: 'edge-blue',     // see THEME_PRESETS
+  accentOverride: null,     // hex string or null → use preset default
   customTitle: '',
   rainbowMode: 'off',  // 'off' | 'vivid' | 'soft' | 'morandi'
   visibleEngines: null, // null = use default (all engines visible)
@@ -803,6 +840,20 @@ async function init() {
     if (state.rainbowMode === true) state.rainbowMode = 'vivid';
     else if (state.rainbowMode === false || state.rainbowMode === undefined) state.rainbowMode = 'off';
     else if (!RAINBOW_PALETTES[state.rainbowMode]) state.rainbowMode = 'off';
+    // Migrate legacy themeMode → themeId (only if the user never set
+    // an explicit themeId before; we keep their old light/dark choice).
+    if (!THEME_PRESETS.some((p) => p.id === state.themeId)) {
+      if (state.themeMode === 'dark') state.themeId = 'edge-dark';
+      else if (state.themeMode === 'light') state.themeId = 'edge-blue';
+      else state.themeId = 'edge-blue';
+    }
+    // Sanitise accentOverride — must be a valid hex string, else null.
+    if (state.accentOverride != null) {
+      if (typeof state.accentOverride !== 'string' ||
+          !/^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(state.accentOverride)) {
+        state.accentOverride = null;
+      }
+    }
   }
   // Resolve visibleEngines: legacy null/missing → all visible; sanitise
   // any unknown ids (e.g. engines removed in a later build).
@@ -961,24 +1012,92 @@ function bindTitleInput() {
   applyCustomTitle();
 }
 function applyTheme() {
-  const mode = state.themeMode || 'auto';
   const html = document.documentElement;
+  // Remove every preset class, then add the active one.
+  THEME_PRESETS.forEach((p) => html.classList.remove('theme-' + p.id));
+  const preset = THEME_PRESETS.find((p) => p.id === state.themeId) || THEME_PRESETS[0];
+  html.classList.add('theme-' + preset.id);
+
+  // Set the mode class so any code that gates on .theme-dark /
+  // .theme-light (e.g. wallpaper solid presets) keeps working.
   html.classList.remove('theme-dark', 'theme-light');
-  if (mode === 'dark') html.classList.add('theme-dark');
-  else if (mode === 'light') html.classList.add('theme-light');
-  // 'auto' -> no class, let @media (prefers-color-scheme: dark) apply
+  if (preset.mode === 'dark') html.classList.add('theme-dark');
+  else html.classList.add('theme-light');
+
+  // Accent override: write CSS vars on the element so they win over
+  // the preset's --accent. We also generate hover / pressed shades by
+  // darkening the input value via color-mix (well-supported in Chromium).
+  if (state.accentOverride && /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(state.accentOverride)) {
+    const base = state.accentOverride.toLowerCase();
+    html.style.setProperty('--accent', base);
+    html.style.setProperty('--accent-hover', `color-mix(in srgb, ${base} 85%, white)`);
+    html.style.setProperty('--accent-pressed', `color-mix(in srgb, ${base} 75%, black)`);
+    html.style.setProperty('--accent-light', `color-mix(in srgb, ${base} 12%, transparent)`);
+  } else {
+    html.style.removeProperty('--accent');
+    html.style.removeProperty('--accent-hover');
+    html.style.removeProperty('--accent-pressed');
+    html.style.removeProperty('--accent-light');
+  }
+
+  // Sync the segmented buttons in the old settings panel
+  // (light / dark / auto) — kept around for users who never opened
+  // the new theme picker.
+  const mode = state.themeMode || 'auto';
   document.querySelectorAll('.theme-tab').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.theme === mode);
   });
+  // Sync the new theme grid (added by renderThemePicker).
+  document.querySelectorAll('[data-theme-pick]').forEach((el) => {
+    el.classList.toggle('active', el.dataset.themePick === preset.id);
+  });
+  // Sync the accent swatch row + custom input.
+  const swatchRoot = document.getElementById('accentSwatches');
+  if (swatchRoot) {
+    swatchRoot.querySelectorAll('[data-accent]').forEach((el) => {
+      el.classList.toggle('active', el.dataset.accent === (state.accentOverride || ''));
+    });
+  }
+  const accentInput = document.getElementById('accentCustomInput');
+  if (accentInput) accentInput.value = state.accentOverride || '';
+
   // Re-resolve wallpaper color (it reads CSS vars which just changed)
   if (!applyWallpaperColor()) applyWallpaper();
   renderBuiltinGrid();
 }
 
+function setTheme(themeId) {
+  if (!THEME_PRESETS.some((p) => p.id === themeId)) return;
+  state.themeId = themeId;
+  // Keep legacy themeMode in sync so wallpaper color presets pick the
+  // right side (light vs dark).
+  const preset = THEME_PRESETS.find((p) => p.id === themeId);
+  state.themeMode = preset.mode;
+  applyTheme();
+  persist();
+}
+
+function setAccentOverride(hex) {
+  if (hex == null || hex === '') {
+    state.accentOverride = null;
+  } else if (typeof hex === 'string' && /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(hex)) {
+    state.accentOverride = hex.toLowerCase();
+  } else {
+    return; // ignore invalid
+  }
+  applyTheme();
+  persist();
+}
+
 function bindThemeControls() {
   document.querySelectorAll('.theme-tab').forEach((btn) => {
     btn.addEventListener('click', () => {
-      state.themeMode = btn.dataset.theme;
+      const m = btn.dataset.theme;
+      state.themeMode = m;
+      // Map the coarse auto / light / dark picker to the closest preset
+      // so the new theme system stays consistent.
+      if (m === 'dark') state.themeId = 'edge-dark';
+      else state.themeId = 'edge-blue'; // 'auto' and 'light' both → edge-blue
       applyTheme();
       persist();
     });
