@@ -250,6 +250,10 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    /* Auto light/dark is driving the theme, so the manual grid is
+       informational only. The settings panel owns the schedule. */
+    .theme-grid.locked { opacity: 0.5; }
+    .theme-grid.locked .theme-card { cursor: not-allowed; }
 
     /* Segmented */
     .segmented {

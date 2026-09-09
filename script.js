@@ -211,6 +211,12 @@ const DEFAULT_STATE = {
   themeMode: 'auto',  // 'auto' | 'light' | 'dark'
   themeId: 'edge-blue',     // see THEME_PRESETS
   accentOverride: null,     // hex string or null → use preset default
+  // Automatic light/dark switching by local time of day.
+  autoTheme: false,
+  autoLightThemeId: 'edge-blue',  // preset used during the day
+  autoDarkThemeId: 'edge-dark',   // preset used at night
+  autoLightStart: '07:00',        // day begins
+  autoDarkStart: '19:00',         // night begins
   customTitle: '',
   rainbowMode: 'off',  // 'off' | 'vivid' | 'soft' | 'morandi'
   visibleEngines: null, // null = use default (all engines visible)
@@ -559,7 +565,17 @@ function setEngine(name) {
   persist();
 }
 
-searchTabs.forEach((t) => t.addEventListener('click', () => setEngine(t.dataset.engine)));
+// Clicking an engine tab moves focus to that <button>, which used to
+// leave the search input blurred — the user had to click the input
+// again before typing. Hand focus straight back to the input after
+// the switch. focusInput() skips the refocus if the user already has
+// a text field focused, which can't be the case here.
+searchTabs.forEach((t) =>
+  t.addEventListener('click', () => {
+    setEngine(t.dataset.engine);
+    focusInput({ force: true });
+  })
+);
 
 function renderEnginePicker() {
   const picker = document.getElementById('enginePicker');
@@ -911,6 +927,16 @@ async function init() {
         state.accentOverride = null;
       }
     }
+    // Normalise the auto light/dark schedule.
+    state.autoTheme = !!state.autoTheme;
+    if (!THEME_PRESETS.some((p) => p.id === state.autoLightThemeId)) {
+      state.autoLightThemeId = 'edge-blue';
+    }
+    if (!THEME_PRESETS.some((p) => p.id === state.autoDarkThemeId)) {
+      state.autoDarkThemeId = 'edge-dark';
+    }
+    if (parseHHMM(state.autoLightStart) == null) state.autoLightStart = '07:00';
+    if (parseHHMM(state.autoDarkStart) == null) state.autoDarkStart = '19:00';
   }
   // Resolve visibleEngines: legacy null/missing → all visible; sanitise
   // any unknown ids (e.g. engines removed in a later build).
@@ -994,7 +1020,14 @@ function focusInput({ force = false } = {}) {
 }
 
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') focusInput({ force: true });
+  if (document.visibilityState !== 'visible') return;
+  focusInput({ force: true });
+  // Coming back from sleep / another tab may have crossed a schedule
+  // boundary, so re-check the auto light/dark theme immediately
+  // instead of waiting for the next minute tick.
+  if (state.autoTheme && appliedThemeId !== null && resolveThemeId() !== appliedThemeId) {
+    applyTheme();
+  }
 });
 
 window.addEventListener('pageshow', (e) => {
@@ -1119,12 +1152,56 @@ function bindTitleInput() {
   input.value = state.customTitle || '';
   applyCustomTitle();
 }
+// Parse "HH:MM" into minutes since midnight. Returns null for junk.
+function parseHHMM(s) {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(String(s || '').trim());
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (h > 23 || min > 59) return null;
+  return h * 60 + min;
+}
+
+// Which side of the day are we on, given the configured schedule?
+// Returns true for "day". Handles a schedule that wraps midnight
+// (e.g. day 22:00 -> night 06:00).
+function isDaytime(now) {
+  const lightStart = parseHHMM(state.autoLightStart);
+  const darkStart = parseHHMM(state.autoDarkStart);
+  const ls = lightStart == null ? 7 * 60 : lightStart;
+  const ds = darkStart == null ? 19 * 60 : darkStart;
+  const mins = now.getHours() * 60 + now.getMinutes();
+  if (ls === ds) return true; // degenerate config: stay light
+  if (ls < ds) return mins >= ls && mins < ds;
+  return mins >= ls || mins < ds; // wraps midnight
+}
+
+// The theme actually in effect right now. When auto switching is off
+// this is just the user's manual pick.
+function resolveThemeId(now) {
+  const fallback = THEME_PRESETS.some((p) => p.id === state.themeId)
+    ? state.themeId
+    : THEME_PRESETS[0].id;
+  if (!state.autoTheme) return fallback;
+  const day = isDaytime(now || new Date());
+  const want = day ? state.autoLightThemeId : state.autoDarkThemeId;
+  if (THEME_PRESETS.some((p) => p.id === want)) return want;
+  return day ? 'edge-blue' : 'edge-dark';
+}
+
+// The preset id currently painted on <html>. Tracked so the auto
+// light/dark timer can skip redundant re-applies.
+let appliedThemeId = null;
+
 function applyTheme() {
   const html = document.documentElement;
-  // Remove every preset class, then add the active one.
+  // Remove every preset class, then add the active one. When auto
+  // light/dark is on, the active one comes from the schedule.
   THEME_PRESETS.forEach((p) => html.classList.remove('theme-' + p.id));
-  const preset = THEME_PRESETS.find((p) => p.id === state.themeId) || THEME_PRESETS[0];
+  const effectiveId = resolveThemeId();
+  const preset = THEME_PRESETS.find((p) => p.id === effectiveId) || THEME_PRESETS[0];
   html.classList.add('theme-' + preset.id);
+  appliedThemeId = preset.id;
 
   // Set the mode class so any code that gates on .theme-dark /
   // .theme-light (e.g. wallpaper solid presets) keeps working.
@@ -1148,17 +1225,23 @@ function applyTheme() {
     html.style.removeProperty('--accent-light');
   }
 
-  // Sync the segmented buttons in the old settings panel
-  // (light / dark / auto) — kept around for users who never opened
-  // the new theme picker.
-  const mode = state.themeMode || 'auto';
-  document.querySelectorAll('.theme-tab').forEach((btn) => {
-    btn.classList.toggle('active', btn.dataset.theme === mode);
-  });
-  // Sync the new theme grid (added by renderThemePicker).
+  // Sync the new theme grid (added by renderThemePicker). The active
+  // card reflects the *effective* theme, which under auto switching
+  // is whichever preset the schedule picked.
+  const grid = document.getElementById('themeGrid');
   document.querySelectorAll('[data-theme-pick]').forEach((el) => {
     el.classList.toggle('active', el.dataset.themePick === preset.id);
   });
+  // While auto switching is on, the manual grid is inert — the two
+  // selects in the auto section drive the theme instead.
+  if (grid) grid.classList.toggle('auto-disabled', !!state.autoTheme);
+  const gridHint = document.getElementById('themeGridHint');
+  if (gridHint) {
+    gridHint.textContent = state.autoTheme
+      ? '自动切换中 · 由下方「自动明暗」的配置决定'
+      : '8 套主题预设 · 覆盖页面所有色板';
+  }
+  syncAutoThemeControls();
   // Sync the accent swatch row + custom input.
   const swatchRoot = document.getElementById('accentSwatches');
   if (swatchRoot) {
@@ -1273,6 +1356,9 @@ function renderThemePicker() {
   const grid = document.getElementById('themeGrid');
   if (!grid) return;
   grid.innerHTML = '';
+  // Preserve the auto-switching lock: the grid is rebuilt whenever the
+  // picker renders, which happens after applyTheme() in init().
+  grid.classList.toggle('auto-disabled', !!state.autoTheme);
   THEME_PRESETS.forEach((p) => {
     const card = document.createElement('button');
     card.type = 'button';
@@ -1377,22 +1463,112 @@ function bindAccentInput() {
 }
 
 function bindThemeControls() {
-  document.querySelectorAll('.theme-tab').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const m = btn.dataset.theme;
-      state.themeMode = m;
-      // Map the coarse auto / light / dark picker to the closest preset
-      // so the new theme system stays consistent.
-      if (m === 'dark') state.themeId = 'edge-dark';
-      else state.themeId = 'edge-blue'; // 'auto' and 'light' both → edge-blue
-      applyTheme();
-      persist();
-    });
-  });
   renderThemePicker();
   renderAccentSwatches();
   bindAccentInput();
+  renderAutoThemeControls();
 }
+
+// ----- Auto light/dark controls -----
+
+// Human-readable summary shown under the toggle.
+function autoThemeHintText() {
+  if (!state.autoTheme) return '关闭中 · 使用上方手动选择的主题';
+  const day = isDaytime(new Date());
+  const id = day ? state.autoLightThemeId : state.autoDarkThemeId;
+  const preset = THEME_PRESETS.find((p) => p.id === id);
+  return `当前：${day ? '白天' : '夜间'} · ${preset ? preset.label : id}`;
+}
+
+// Push state into the controls without firing change events. Called
+// from applyTheme() so the panel always reflects reality.
+function syncAutoThemeControls() {
+  const toggle = document.getElementById('autoThemeToggle');
+  if (toggle) toggle.checked = !!state.autoTheme;
+  const cfg = document.getElementById('autoThemeConfig');
+  if (cfg) cfg.classList.toggle('hidden', !state.autoTheme);
+  const lightSel = document.getElementById('autoLightTheme');
+  if (lightSel) lightSel.value = state.autoLightThemeId;
+  const darkSel = document.getElementById('autoDarkTheme');
+  if (darkSel) darkSel.value = state.autoDarkThemeId;
+  const ls = document.getElementById('autoLightStart');
+  if (ls) ls.value = state.autoLightStart;
+  const ds = document.getElementById('autoDarkStart');
+  if (ds) ds.value = state.autoDarkStart;
+  const hint = document.getElementById('autoThemeHint');
+  if (hint) hint.textContent = autoThemeHintText();
+}
+
+let autoThemeControlsBound = false;
+function renderAutoThemeControls() {
+  const lightSel = document.getElementById('autoLightTheme');
+  const darkSel = document.getElementById('autoDarkTheme');
+
+  // Populate the two preset selects once.
+  [lightSel, darkSel].forEach((sel) => {
+    if (!sel || sel.options.length) return;
+    THEME_PRESETS.forEach((p) => {
+      const o = document.createElement('option');
+      o.value = p.id;
+      o.textContent = p.label + (p.mode === 'dark' ? '（暗）' : '（亮）');
+      sel.appendChild(o);
+    });
+  });
+
+  if (!autoThemeControlsBound) {
+    autoThemeControlsBound = true;
+    const toggle = document.getElementById('autoThemeToggle');
+    if (toggle) {
+      toggle.addEventListener('change', () => {
+        state.autoTheme = toggle.checked;
+        applyTheme();
+        persist();
+        toast(state.autoTheme ? '已开启自动明暗' : '已关闭自动明暗');
+      });
+    }
+    if (lightSel) {
+      lightSel.addEventListener('change', () => {
+        state.autoLightThemeId = lightSel.value;
+        applyTheme();
+        persist();
+      });
+    }
+    if (darkSel) {
+      darkSel.addEventListener('change', () => {
+        state.autoDarkThemeId = darkSel.value;
+        applyTheme();
+        persist();
+      });
+    }
+    const ls = document.getElementById('autoLightStart');
+    if (ls) {
+      ls.addEventListener('change', () => {
+        state.autoLightStart = ls.value || '07:00';
+        applyTheme();
+        persist();
+      });
+    }
+    const ds = document.getElementById('autoDarkStart');
+    if (ds) {
+      ds.addEventListener('change', () => {
+        state.autoDarkStart = ds.value || '19:00';
+        applyTheme();
+        persist();
+      });
+    }
+  }
+
+  syncAutoThemeControls();
+}
+
+// Re-evaluate the schedule once a minute. Only re-applies when the
+// resolved theme actually changed, so this is cheap. The
+// `appliedThemeId === null` guard skips the tick before init() has
+// painted the first theme.
+setInterval(() => {
+  if (!state.autoTheme || appliedThemeId === null) return;
+  if (resolveThemeId() !== appliedThemeId) applyTheme();
+}, 60_000);
 
 function applyRainbow() {
   const mode = state.rainbowMode || 'off';

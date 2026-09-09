@@ -9,7 +9,9 @@ corners, a single accent color, and quiet motion.
 ### Search
 
 - **Multi-engine search** — switch between **Baidu** / **Bing** / **Google** /
-  **GitHub** / **威科** / **Bilibili** with one click.
+  **GitHub** / **威科** / **Bilibili** with one click. Switching an engine hands
+  focus straight back to the search box, so you can keep typing without
+  clicking the input again.
 - **Custom engine bar** — choose which engines appear in the search strip from
   the settings panel (at least one must stay enabled) and drag the rows to
   reorder them; the search strip mirrors the same order.
@@ -33,6 +35,9 @@ corners, a single accent color, and quiet motion.
 
 - **8 theme presets** — Edge Blue, Edge Dark, Pure Light, Sepia, Solarized,
   Slate, High Contrast, and Rosé Pine. Each is a complete palette.
+- **Auto light/dark by local time** — toggle it on and pick which preset to use
+  during the day and which at night, plus the two switch-over times. The page
+  re-evaluates once a minute and whenever the tab becomes visible again.
 - **Custom accent color** — pick from 7 swatches or enter any HEX value;
   hover/pressed shades are derived automatically.
 - **Rainbow mode** — three tiers (vivid / soft / morandi) that tint the engine

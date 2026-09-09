@@ -797,6 +797,118 @@ html.theme-high-contrast .search-panel { box-shadow: 0 0 0 1px rgba(255, 255, 25
   outline: none;
 }
 
+/* ----- Auto light/dark switch + config ----- */
+.cyber-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  padding: 2px 0;
+}
+.cyber-switch input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.cyber-switch-track {
+  position: relative;
+  flex-shrink: 0;
+  width: 38px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--surface-pressed);
+  border: 1px solid var(--border-strong);
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+.cyber-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--surface-solid);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cyber-switch input:checked + .cyber-switch-track {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.cyber-switch input:checked + .cyber-switch-track .cyber-switch-thumb {
+  transform: translateX(18px);
+}
+.cyber-switch input:focus-visible + .cyber-switch-track {
+  box-shadow: var(--focus-ring);
+}
+.cyber-switch-text {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.auto-theme-config {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px;
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.auto-theme-config.hidden { display: none; }
+.auto-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.auto-row-label {
+  flex-shrink: 0;
+  width: 68px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.auto-row .cyber-input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+/* Native select needs its own chevron styling to match .cyber-input */
+.cyber-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-tertiary) 50%),
+    linear-gradient(135deg, var(--text-tertiary) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) calc(50% - 2px),
+    calc(100% - 9px) calc(50% - 2px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 26px;
+  cursor: pointer;
+}
+.cyber-select option {
+  background: var(--surface-solid);
+  color: var(--text-primary);
+}
+/* Date/time inputs pick up the theme surface */
+.auto-row input[type="time"] {
+  color-scheme: light dark;
+}
+html.theme-light .auto-row input[type="time"] { color-scheme: light; }
+html.theme-dark .auto-row input[type="time"] { color-scheme: dark; }
+
+/* The manual theme grid is inert while auto switching drives the
+   theme; the hint below it explains why. */
+.theme-grid.auto-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
 .cyber-btn {
   background: var(--accent);
   border: none;

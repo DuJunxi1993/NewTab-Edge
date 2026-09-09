@@ -149,16 +149,52 @@
     modeTag.textContent = preset.mode === 'dark' ? '暗' : '亮';
   }
 
+  // ----- Auto light/dark (mirrors script.js) -----
+  // The popup has to resolve the effective theme itself: it is a
+  // separate document and can't call into the new-tab page.
+  function parseHHMM(s) {
+    const m = /^(\d{1,2}):(\d{2})$/.exec(String(s || '').trim());
+    if (!m) return null;
+    const h = Number(m[1]);
+    const min = Number(m[2]);
+    if (h > 23 || min > 59) return null;
+    return h * 60 + min;
+  }
+  function isDaytime(now) {
+    const ls = parseHHMM(state.autoLightStart);
+    const ds = parseHHMM(state.autoDarkStart);
+    const a = ls == null ? 7 * 60 : ls;
+    const b = ds == null ? 19 * 60 : ds;
+    const mins = now.getHours() * 60 + now.getMinutes();
+    if (a === b) return true;
+    if (a < b) return mins >= a && mins < b;
+    return mins >= a || mins < b;
+  }
+  function effectiveThemeId() {
+    const fallback = THEMES.some((t) => t.id === state.themeId) ? state.themeId : 'edge-blue';
+    if (!state.autoTheme) return fallback;
+    const day = isDaytime(new Date());
+    const want = day ? state.autoLightThemeId : state.autoDarkThemeId;
+    if (THEMES.some((t) => t.id === want)) return want;
+    return day ? 'edge-blue' : 'edge-dark';
+  }
+
   // ----- Theme grid -----
   function renderThemes() {
     themeGrid.innerHTML = '';
+    const effective = effectiveThemeId();
+    // When auto switching drives the theme, the manual grid is
+    // informational only — the settings panel owns the schedule.
+    themeGrid.classList.toggle('locked', !!state.autoTheme);
     THEMES.forEach((t) => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'theme-card';
       btn.dataset.themeId = t.id;
-      btn.title = t.label;
-      if (state.themeId === t.id) btn.classList.add('active');
+      btn.title = state.autoTheme
+        ? `${t.label}（自动明暗中，请在设置面板配置）`
+        : t.label;
+      if (effective === t.id) btn.classList.add('active');
 
       const dot = document.createElement('span');
       dot.className = 'dot';
@@ -176,6 +212,10 @@
 
       btn.append(dot, name);
       btn.addEventListener('click', () => {
+        if (state.autoTheme) {
+          setStatus('自动明暗已开启，请先在设置面板关闭', false);
+          return;
+        }
         state.themeId = t.id;
         state.themeMode = t.mode; // keep the legacy field in sync
         save({ ok: `主题：${t.label}` });
@@ -318,6 +358,9 @@
       if (!RAINBOW_TIERS.includes(state.rainbowMode)) state.rainbowMode = 'off';
       if (!PATTERNS.includes(state.bgPattern)) state.bgPattern = 'off';
       if (!Array.isArray(state.history)) state.history = [];
+      state.autoTheme = !!state.autoTheme;
+      if (!THEMES.some((t) => t.id === state.autoLightThemeId)) state.autoLightThemeId = 'edge-blue';
+      if (!THEMES.some((t) => t.id === state.autoDarkThemeId)) state.autoDarkThemeId = 'edge-dark';
 
       applyPopupPalette();
       renderThemes();

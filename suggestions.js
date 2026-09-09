@@ -29,6 +29,7 @@
   let activeIndex = -1;     // highlighted row in the dropdown
   let currentItems = [];    // items currently shown
   let debounceTimer = null;
+  let blurTimer = null;     // pending blur-hide, cancelled if focus returns
   let inflightAbort = null; // AbortController for in-flight fetch
   let lastFetchedKey = '';   // dedupe identical consecutive queries
 
@@ -210,12 +211,22 @@
   }
 
   function onFocus() {
+    // Cancel a pending blur-hide: focus may be coming straight back
+    // from an engine-tab click, and the dropdown should survive that.
+    if (blurTimer) {
+      clearTimeout(blurTimer);
+      blurTimer = null;
+    }
     if (input.value.trim()) fetchSuggestions(input.value);
   }
 
   function onBlur() {
-    // Delay hiding so click-on-item still registers
-    setTimeout(hideSuggestions, 120);
+    // Delay hiding so click-on-item still registers.
+    if (blurTimer) clearTimeout(blurTimer);
+    blurTimer = setTimeout(() => {
+      blurTimer = null;
+      hideSuggestions();
+    }, 120);
   }
 
   function onSuggestClick(e) {
