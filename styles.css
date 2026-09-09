@@ -367,23 +367,43 @@ html[data-pattern="radial"] .bg-pattern[data-pattern-layer="radial"] { opacity: 
   /* Adaptive accent underline. Width is set by fitTitleUnderline()
      in script.js via the --title-underline-w CSS variable; if the JS
      hasn't run yet we fall back to a sane default. The underline is
-     always centred under the title. Sits 8px below the title text so
-     it reads as a tight accent, then 28px of breathing room before
-     the search panel starts. */
+     always centred under the title.
+
+     Style: a horizontal "glow bar" — accent-coloured in the middle,
+     fading to transparent at both ends. Sits 8px below the title
+     text so it reads as a tight accent, then 28px of breathing room
+     before the search panel starts. When rainbow mode is active,
+     script.js overrides the background with a multi-stop palette
+     sweep via the .title::after[data-rainbow="1"] selector below. */
   content: "";
   position: absolute;
   left: 50%;
   bottom: -8px;
   width: var(--title-underline-w, 30%);
-  height: 2px;
+  height: 3px;
   transform: translateX(-50%);
-  background: var(--accent);
+  /* Glow-bar gradient: transparent → accent mid → transparent.
+     color-mix() blends the accent with the panel surface so the
+     endpoints stay subtle on every theme. */
+  --underline-end: color-mix(in srgb, var(--accent) 75%, transparent);
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--underline-end) 18%,
+    var(--accent) 50%,
+    var(--underline-end) 82%,
+    transparent 100%);
   border-radius: 2px;
-  opacity: 0.85;
-  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent);
-  transition: width 0.25s ease, opacity 0.2s ease;
+  box-shadow:
+    0 0 10px color-mix(in srgb, var(--accent) 50%, transparent),
+    0 0 2px color-mix(in srgb, var(--accent) 80%, transparent);
+  transition: width 0.25s ease, opacity 0.2s ease, box-shadow 0.25s ease;
 }
-.title:hover::after { opacity: 1; transition: width 0.25s ease, opacity 0.2s ease; }
+.title:hover::after {
+  box-shadow:
+    0 0 14px color-mix(in srgb, var(--accent) 65%, transparent),
+    0 0 3px color-mix(in srgb, var(--accent) 85%, transparent);
+  transition: width 0.25s ease, opacity 0.2s ease, box-shadow 0.25s ease;
+}
 
 @keyframes titleFade {
   from { opacity: 0; transform: translateY(8px); }
@@ -1489,6 +1509,20 @@ html[data-rainbow="morandi"] .search-btn {
 }
 html[data-rainbow="morandi"] .search-btn:hover { filter: brightness(1.04); }
 html[data-rainbow="morandi"] .search-btn:active { filter: brightness(0.95); }
+
+/* ----- Rainbow title underline -----
+When rainbow mode is active, script.js sets a multi-stop palette
+gradient as `--title-underline-rainbow` on the .title element. The
+selector below prefers that gradient over the default glow bar. */
+.title[data-rainbow-underline="1"]::after {
+  background: var(--title-underline-rainbow,
+    linear-gradient(90deg, transparent, var(--accent), transparent));
+  /* Slightly stronger glow on top of the colourful gradient so it
+     still reads as an accent bar on busy backgrounds. */
+  box-shadow:
+    0 0 10px color-mix(in srgb, var(--accent) 35%, transparent),
+    0 0 2px color-mix(in srgb, var(--accent) 65%, transparent);
+}
 
 /* ----- Search engine visibility picker (settings panel) ----- */
 .engine-picker {

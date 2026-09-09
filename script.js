@@ -1012,8 +1012,22 @@ function applyCustomTitle() {
         span.style.color = colors[i % colors.length];
         titleEl.appendChild(span);
       });
+      // Mirror the same palette onto the title underline so the bar
+      // echoes the glyph colours. We smooth the endpoints with a
+      // touch of transparency so the bar fades to the page background
+      // at both ends rather than cutting off hard.
+      const n = colors.length;
+      const stops = colors.map((c, i) => {
+        const pct = (i / Math.max(1, n - 1)) * 80 + 10; // 10%..90%
+        return `${c} ${pct.toFixed(1)}%`;
+      }).join(', ');
+      const rainbowBg = `linear-gradient(90deg, transparent 0%, ${stops}, transparent 100%)`;
+      titleEl.style.setProperty('--title-underline-rainbow', rainbowBg);
+      titleEl.setAttribute('data-rainbow-underline', '1');
     } else {
       titleEl.textContent = finalTitle;
+      titleEl.removeAttribute('data-rainbow-underline');
+      titleEl.style.removeProperty('--title-underline-rainbow');
     }
   }
 
