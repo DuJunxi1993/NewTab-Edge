@@ -374,7 +374,13 @@ html[data-pattern="radial"] .bg-pattern[data-pattern-layer="radial"] { opacity: 
      text so it reads as a tight accent, then 28px of breathing room
      before the search panel starts. When rainbow mode is active,
      script.js overrides the background with a multi-stop palette
-     sweep via the .title::after[data-rainbow="1"] selector below. */
+     sweep via the .title::after[data-rainbow="1"] selector below.
+
+     The glow box-shadow is restricted to dark themes. On light
+     backgrounds the shadow reads as an outline (because it's a darker
+     colour than the page), which makes the bar feel framed instead
+     of floating. Dark themes get the glow; light themes get a clean
+     gradient-only line. */
   content: "";
   position: absolute;
   left: 50%;
@@ -382,9 +388,6 @@ html[data-pattern="radial"] .bg-pattern[data-pattern-layer="radial"] { opacity: 
   width: var(--title-underline-w, 30%);
   height: 3px;
   transform: translateX(-50%);
-  /* Glow-bar gradient: transparent → accent mid → transparent.
-     color-mix() blends the accent with the panel surface so the
-     endpoints stay subtle on every theme. */
   --underline-end: color-mix(in srgb, var(--accent) 75%, transparent);
   background: linear-gradient(90deg,
     transparent 0%,
@@ -393,16 +396,39 @@ html[data-pattern="radial"] .bg-pattern[data-pattern-layer="radial"] { opacity: 
     var(--underline-end) 82%,
     transparent 100%);
   border-radius: 2px;
+  box-shadow: none;
+  transition: width 0.25s ease, opacity 0.2s ease, box-shadow 0.25s ease;
+}
+/* Dark-theme glow. .theme-dark covers manual dark + OS-pref dark
+   (the @media query below mirrors it). The shadow is intentionally
+   subtle so it doesn't compete with the search panel's own shadow. */
+html.theme-dark .title::after {
   box-shadow:
     0 0 10px color-mix(in srgb, var(--accent) 50%, transparent),
     0 0 2px color-mix(in srgb, var(--accent) 80%, transparent);
-  transition: width 0.25s ease, opacity 0.2s ease, box-shadow 0.25s ease;
+}
+@media (prefers-color-scheme: dark) {
+  html:not(.theme-light) .title::after {
+    box-shadow:
+      0 0 10px color-mix(in srgb, var(--accent) 50%, transparent),
+      0 0 2px color-mix(in srgb, var(--accent) 80%, transparent);
+  }
 }
 .title:hover::after {
+  box-shadow: none;
+  transition: width 0.25s ease, opacity 0.2s ease, box-shadow 0.25s ease;
+}
+html.theme-dark .title:hover::after {
   box-shadow:
     0 0 14px color-mix(in srgb, var(--accent) 65%, transparent),
     0 0 3px color-mix(in srgb, var(--accent) 85%, transparent);
-  transition: width 0.25s ease, opacity 0.2s ease, box-shadow 0.25s ease;
+}
+@media (prefers-color-scheme: dark) {
+  html:not(.theme-light) .title:hover::after {
+    box-shadow:
+      0 0 14px color-mix(in srgb, var(--accent) 65%, transparent),
+      0 0 3px color-mix(in srgb, var(--accent) 85%, transparent);
+  }
 }
 
 @keyframes titleFade {
@@ -1517,11 +1543,21 @@ selector below prefers that gradient over the default glow bar. */
 .title[data-rainbow-underline="1"]::after {
   background: var(--title-underline-rainbow,
     linear-gradient(90deg, transparent, var(--accent), transparent));
-  /* Slightly stronger glow on top of the colourful gradient so it
-     still reads as an accent bar on busy backgrounds. */
+  /* No box-shadow on light themes — same reason as the default bar.
+     Dark themes get a subtle glow blended with the rainbow tint. */
+  box-shadow: none;
+}
+html.theme-dark .title[data-rainbow-underline="1"]::after {
   box-shadow:
     0 0 10px color-mix(in srgb, var(--accent) 35%, transparent),
     0 0 2px color-mix(in srgb, var(--accent) 65%, transparent);
+}
+@media (prefers-color-scheme: dark) {
+  html:not(.theme-light) .title[data-rainbow-underline="1"]::after {
+    box-shadow:
+      0 0 10px color-mix(in srgb, var(--accent) 35%, transparent),
+      0 0 2px color-mix(in srgb, var(--accent) 65%, transparent);
+  }
 }
 
 /* ----- Search engine visibility picker (settings panel) ----- */
