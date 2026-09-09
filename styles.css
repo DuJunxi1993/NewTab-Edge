@@ -350,36 +350,36 @@ html[data-pattern="radial"] .bg-pattern[data-pattern-layer="radial"] { opacity: 
   letter-spacing: -0.025em;
   text-align: center;
   margin-bottom: 8px;
-  color: var(--text-primary);
-  /* Subtle vertical light gradient so the title reads less flat. */
-  background-image: linear-gradient(180deg,
-    var(--text-primary) 0%,
-    var(--text-primary) 80%,
-    color-mix(in srgb, var(--text-primary) 80%, transparent) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  /* --title-fill defaults to --text-primary but each preset can override
+     it to a brighter / more saturated color so the title reads
+     punchier on dark backgrounds. Earlier we used a 100%->80% vertical
+     gradient here, but on dark themes that bottom 80% stop made the
+     title look noticeably grayer; switching to a solid fill keeps the
+     contrast consistent across the whole title. */
+  color: var(--title-fill, var(--text-primary));
   text-shadow: var(--title-text-shadow);
-  /* Drop the fake glow on the foreground (text-fill-color hides it)
-     and apply it via a pseudo-element so the gradient still shows. */
   position: relative;
   animation: titleFade 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) both;
 }
 .title::after {
-  /* Short accent underline, ~30% of the title width. */
+  /* Adaptive accent underline. Width is set by fitTitleUnderline()
+     in script.js via the --title-underline-w CSS variable; if the JS
+     hasn't run yet we fall back to a sane default. The underline is
+     always centred under the title. */
   content: "";
   position: absolute;
   left: 50%;
   bottom: -10px;
-  width: 30%;
+  width: var(--title-underline-w, 30%);
   height: 2px;
   transform: translateX(-50%);
   background: var(--accent);
   border-radius: 2px;
   opacity: 0.85;
   box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent);
+  transition: width 0.25s ease, opacity 0.2s ease;
 }
-.title:hover::after { opacity: 1; width: 38%; transition: all 0.25s ease; }
+.title:hover::after { opacity: 1; transition: width 0.25s ease, opacity 0.2s ease; }
 
 @keyframes titleFade {
   from { opacity: 0; transform: translateY(8px); }
@@ -394,22 +394,6 @@ html[data-pattern="radial"] .bg-pattern[data-pattern-layer="radial"] { opacity: 
   margin: 0 0.25em;
   font-weight: 400;
   text-shadow: var(--title-text-shadow);
-}
-
-.subtitle {
-  font-size: 14px;
-  font-weight: 400;
-  letter-spacing: 0.3px;
-  color: var(--text-secondary);
-  margin-bottom: 40px;
-  text-align: center;
-  text-shadow: var(--subtitle-text-shadow);
-  animation: subtitleFade 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) 0.2s both;
-}
-
-@keyframes subtitleFade {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ===== Search panel (Edge-style Mica card) ===== */
@@ -817,9 +801,6 @@ html[data-pattern="radial"] .bg-pattern[data-pattern-layer="radial"] { opacity: 
   .search-panel {
     padding: 12px;
   }
-  .subtitle {
-    margin-bottom: 28px;
-  }
 }
 
 
@@ -1025,6 +1006,7 @@ html.theme-edge-dark {
   --text-primary: #ffffff;
   --text-secondary: #c5c5c5;
   --text-tertiary: #a0a0a0;
+  --title-fill: #ffffff;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24), 0 2px 6px rgba(0, 0, 0, 0.20);
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.30), 0 8px 24px rgba(0, 0, 0, 0.40);
@@ -1066,6 +1048,7 @@ html.theme-slate {
 
   --text-primary: #e6e8eb;
   --text-secondary: #aab0b8;
+  --title-fill: #ffffff;
   --text-tertiary: #7e848c;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.28), 0 2px 6px rgba(0, 0, 0, 0.22);
@@ -1107,6 +1090,7 @@ html.theme-rosepine {
   --text-primary: #e0def4;
   --text-secondary: #908caa;
   --text-tertiary: #6e6a86;
+  --title-fill: #ffffff;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.30), 0 2px 6px rgba(0, 0, 0, 0.22);
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.36), 0 8px 24px rgba(0, 0, 0, 0.42);

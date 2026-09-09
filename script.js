@@ -1029,6 +1029,9 @@ function applyCustomTitle() {
     if (hint) hint.textContent = valid ? '英文 / 数字 ≤ 14 字符 · 中文 ≤ 7 汉字' : reason;
     input.style.borderColor = valid ? '' : 'var(--danger)';
   }
+  // Resize the underline so it stays "略短一点" relative to the new
+  // title text. Done after the DOM is updated above.
+  fitTitleUnderline();
 }
 
 function bindTitleInput() {
@@ -1096,6 +1099,34 @@ function applyTheme() {
   // Re-resolve wallpaper color (it reads CSS vars which just changed)
   if (!applyWallpaperColor()) applyWallpaper();
   renderBuiltinGrid();
+  // Theme may shift the title's effective width (font fallback etc.).
+  fitTitleUnderline();
+}
+
+// Measure the rendered title and resize the underline pseudo-element to
+// match (slightly shorter). Called after every title render and on
+// theme change; ResizeObserver keeps it in sync with later reflows.
+let titleUnderlineObs = null;
+function fitTitleUnderline() {
+  const titleEl = document.querySelector('.title');
+  if (!titleEl) return;
+  // The underline is rendered via .title::after in CSS. We can't set
+  // its width from JS directly (pseudo-elements are read-mostly from
+  // CSS), but we CAN size the title itself with inline padding to give
+  // the underline the visual width we want. The simpler approach is
+  // to set a CSS variable that the pseudo-element uses.
+  const w = titleEl.getBoundingClientRect().width;
+  // Cap at 0.55 of the title width so the line is "略短一点" (per
+  // user feedback). Min 28px so single-char titles still get a
+  // visible line.
+  const target = Math.max(28, Math.min(w * 0.55, w - 8));
+  titleEl.style.setProperty('--title-underline-w', target + 'px');
+  // Lazily start a ResizeObserver so we follow future reflows
+  // (rainbow toggle changes the DOM children, font-loading events,
+  // theme gradient widths, etc.).
+  if (titleUnderlineObs) titleUnderlineObs.disconnect();
+  titleUnderlineObs = new ResizeObserver(() => fitTitleUnderline());
+  titleUnderlineObs.observe(titleEl);
 }
 
 function setTheme(themeId) {
