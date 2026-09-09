@@ -34,7 +34,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     .head .logo {
       width: 22px;
@@ -61,18 +61,156 @@
       color: var(--text-tertiary);
     }
 
-    /* ----- Section ----- */
-    .section { margin-bottom: 12px; }
-    .section:last-of-type { margin-bottom: 0; }
+    /* ----- Section header ----- */
     .section-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       font: 600 10px "Inter", system-ui;
       letter-spacing: 0.8px;
       color: var(--text-tertiary);
       margin-bottom: 6px;
       text-transform: uppercase;
     }
+    .section-label .count {
+      font: 500 10px "JetBrains Mono", ui-monospace, monospace;
+      letter-spacing: 0;
+    }
+    .link-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      font: 500 10px "Inter", system-ui;
+      letter-spacing: 0;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      text-transform: none;
+    }
+    .link-btn:hover { color: var(--danger); }
 
-    /* ----- Theme grid ----- */
+    /* ----- History (primary content) ----- */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .history-item:hover { background: var(--surface); }
+    .history-item .q {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+      color: var(--text);
+    }
+    .history-item .eng {
+      flex-shrink: 0;
+      font: 500 9px "JetBrains Mono", ui-monospace, monospace;
+      padding: 1px 4px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+    }
+    .history-item .when {
+      flex-shrink: 0;
+      font: 400 10px "JetBrains Mono", ui-monospace, monospace;
+      color: var(--text-tertiary);
+    }
+    .history-item .rm {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      display: grid;
+      place-items: center;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.12s, color 0.12s;
+      padding: 0;
+    }
+    .history-item:hover .rm { opacity: 1; }
+    .history-item .rm:hover { color: var(--danger); }
+
+    .empty {
+      padding: 18px 12px;
+      text-align: center;
+      font-size: 11px;
+      line-height: 1.6;
+      color: var(--text-tertiary);
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+    }
+    .empty strong {
+      display: block;
+      font-weight: 500;
+      color: var(--text-dim);
+      margin-bottom: 2px;
+    }
+
+    /* ----- Collapsed appearance section ----- */
+    details.appearance {
+      margin-top: 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+    }
+    details.appearance > summary {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      list-style: none;
+      cursor: pointer;
+      font: 600 10px "Inter", system-ui;
+      letter-spacing: 0.8px;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      padding: 3px 0;
+      user-select: none;
+      transition: color 0.14s;
+    }
+    details.appearance > summary::-webkit-details-marker { display: none; }
+    details.appearance > summary:hover { color: var(--text); }
+    details.appearance > summary .chev {
+      display: inline-block;
+      font-size: 9px;
+      transition: transform 0.18s ease;
+      transform-origin: 50% 50%;
+    }
+    details.appearance[open] > summary .chev { transform: rotate(90deg); }
+    details.appearance > summary .summary-hint {
+      margin-left: auto;
+      font: 400 10px "Inter", system-ui;
+      letter-spacing: 0;
+      text-transform: none;
+      color: var(--text-tertiary);
+      opacity: 0.8;
+    }
+    .appearance-body { padding-top: 10px; }
+
+    .field { margin-bottom: 10px; }
+    .field:last-child { margin-bottom: 0; }
+    .field-label {
+      font: 600 10px "Inter", system-ui;
+      letter-spacing: 0.8px;
+      color: var(--text-tertiary);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+
+    /* Theme grid */
     .theme-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -113,7 +251,7 @@
       white-space: nowrap;
     }
 
-    /* ----- Segmented ----- */
+    /* Segmented */
     .segmented {
       display: flex;
       gap: 2px;
@@ -140,74 +278,14 @@
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
     }
 
-    /* ----- History ----- */
-    .history-list { display: flex; flex-direction: column; gap: 2px; }
-    .history-item {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      padding: 5px 7px;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background 0.12s;
-    }
-    .history-item:hover { background: var(--surface-hover); }
-    .history-item .q {
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 12px;
-    }
-    .history-item .eng {
-      flex-shrink: 0;
-      font: 500 9px "JetBrains Mono", ui-monospace, monospace;
-      padding: 1px 4px;
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      color: var(--text-tertiary);
-      text-transform: uppercase;
-    }
-    .history-item .when {
-      flex-shrink: 0;
-      font: 400 10px "JetBrains Mono", ui-monospace, monospace;
-      color: var(--text-tertiary);
-    }
-    .history-item .rm {
-      flex-shrink: 0;
-      width: 16px;
-      height: 16px;
-      display: grid;
-      place-items: center;
-      background: transparent;
-      border: none;
-      border-radius: 3px;
-      color: var(--text-tertiary);
-      cursor: pointer;
-      opacity: 0;
-      transition: opacity 0.12s, color 0.12s;
-      padding: 0;
-    }
-    .history-item:hover .rm { opacity: 1; }
-    .history-item .rm:hover { color: var(--danger); }
-    .empty {
-      padding: 10px 0;
-      text-align: center;
-      font-size: 11px;
-      color: var(--text-tertiary);
-    }
-
     /* ----- Footer ----- */
     .footer {
-      display: flex;
-      gap: 6px;
       margin-top: 12px;
       padding-top: 10px;
       border-top: 1px solid var(--border);
     }
     .btn {
-      flex: 1;
+      width: 100%;
       border: 1px solid var(--border);
       background: var(--surface);
       color: var(--text);
@@ -249,36 +327,49 @@
     <span class="mode" id="modeTag">—</span>
   </div>
 
-  <div class="section">
-    <div class="section-label">Theme // 主题</div>
-    <div class="theme-grid" id="themeGrid"></div>
+  <!-- Recent searches: the primary content of this popup -->
+  <div class="section-label">
+    <span>Recent // 最近搜索</span>
+    <button class="link-btn" id="clearHistory" type="button" hidden>清空</button>
+  </div>
+  <div class="history-list" id="historyList"></div>
+  <div class="empty" id="historyEmpty" hidden>
+    <strong>还没有搜索记录</strong>
+    在新标签页搜索一次就会出现在这里
   </div>
 
-  <div class="section">
-    <div class="section-label">Multicolor // 多彩模式</div>
-    <div class="segmented" id="rainbowSeg">
-      <button class="seg-btn" data-rainbow="off" type="button">OFF</button>
-      <button class="seg-btn" data-rainbow="vivid" type="button">霓虹</button>
-      <button class="seg-btn" data-rainbow="soft" type="button">柔和</button>
-      <button class="seg-btn" data-rainbow="morandi" type="button">莫兰迪</button>
+  <!-- Appearance settings: collapsed by default -->
+  <details class="appearance" id="appearance">
+    <summary>
+      <span class="chev">▸</span>
+      <span>外观设置 // Appearance</span>
+      <span class="summary-hint">点击展开</span>
+    </summary>
+    <div class="appearance-body">
+      <div class="field">
+        <div class="field-label">Theme // 主题</div>
+        <div class="theme-grid" id="themeGrid"></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Multicolor // 多彩模式</div>
+        <div class="segmented" id="rainbowSeg">
+          <button class="seg-btn" data-rainbow="off" type="button">OFF</button>
+          <button class="seg-btn" data-rainbow="vivid" type="button">霓虹</button>
+          <button class="seg-btn" data-rainbow="soft" type="button">柔和</button>
+          <button class="seg-btn" data-rainbow="morandi" type="button">莫兰迪</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Bg pattern // 背景图案</div>
+        <div class="segmented" id="patternSeg">
+          <button class="seg-btn" data-pattern="off" type="button">OFF</button>
+          <button class="seg-btn" data-pattern="grid" type="button">GRID</button>
+          <button class="seg-btn" data-pattern="topo" type="button">TOPO</button>
+          <button class="seg-btn" data-pattern="radial" type="button">RADIAL</button>
+        </div>
+      </div>
     </div>
-  </div>
-
-  <div class="section">
-    <div class="section-label">Bg pattern // 背景图案</div>
-    <div class="segmented" id="patternSeg">
-      <button class="seg-btn" data-pattern="off" type="button">OFF</button>
-      <button class="seg-btn" data-pattern="grid" type="button">GRID</button>
-      <button class="seg-btn" data-pattern="topo" type="button">TOPO</button>
-      <button class="seg-btn" data-pattern="radial" type="button">RADIAL</button>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-label">Recent // 最近搜索</div>
-    <div class="history-list" id="historyList"></div>
-    <div class="empty" id="historyEmpty" hidden>暂无搜索记录</div>
-  </div>
+  </details>
 
   <div class="footer">
     <button class="btn" id="openNewTab" type="button">

@@ -88,7 +88,9 @@
     bilibili: { label: 'BILIBILI', url: (q) => `https://search.bilibili.com/all?keyword=${encodeURIComponent(q)}` },
   };
 
-  const HISTORY_SHOWN = 5;
+  // Recent searches are the popup's primary content, so show a
+  // generous slice of the stored history (which is capped at 30).
+  const HISTORY_SHOWN = 8;
   const RAINBOW_TIERS = ['off', 'vivid', 'soft', 'morandi'];
   const PATTERNS = ['off', 'grid', 'topo', 'radial'];
 
@@ -98,6 +100,8 @@
   const patternSeg = document.getElementById('patternSeg');
   const historyList = document.getElementById('historyList');
   const historyEmpty = document.getElementById('historyEmpty');
+  const clearHistoryBtn = document.getElementById('clearHistory');
+  const appearance = document.getElementById('appearance');
   const modeTag = document.getElementById('modeTag');
   const openNewTabBtn = document.getElementById('openNewTab');
   const statusEl = document.getElementById('status');
@@ -214,12 +218,13 @@
   function renderHistory() {
     const items = Array.isArray(state.history) ? state.history : [];
     historyList.innerHTML = '';
+    if (clearHistoryBtn) clearHistoryBtn.hidden = items.length === 0;
     if (!items.length) {
       historyEmpty.hidden = false;
       return;
     }
     historyEmpty.hidden = true;
-    items.slice(0, HISTORY_SHOWN).forEach((h, idx) => {
+    items.slice(0, HISTORY_SHOWN).forEach((h) => {
       if (!h || !h.q) return;
       const row = document.createElement('div');
       row.className = 'history-item';
@@ -263,7 +268,26 @@
         window.close();
       });
       historyList.appendChild(row);
-      void idx;
+    });
+  }
+
+  // ----- Appearance section: collapsed by default -----
+  // <details> starts closed because the markup has no `open`
+  // attribute, and we deliberately do NOT persist the expanded state —
+  // every popup open should lead with the recent searches.
+  if (appearance) {
+    const hint = appearance.querySelector('.summary-hint');
+    appearance.addEventListener('toggle', () => {
+      if (hint) hint.textContent = appearance.open ? '点击收起' : '点击展开';
+    });
+  }
+
+  // ----- Clear all history -----
+  if (clearHistoryBtn) {
+    clearHistoryBtn.addEventListener('click', () => {
+      state.history = [];
+      save({ ok: '已清空搜索记录' });
+      renderHistory();
     });
   }
 
