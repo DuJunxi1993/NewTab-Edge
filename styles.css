@@ -280,9 +280,35 @@ body::before {
   text-align: center;
   margin-bottom: 8px;
   color: var(--text-primary);
+  /* Subtle vertical light gradient so the title reads less flat. */
+  background-image: linear-gradient(180deg,
+    var(--text-primary) 0%,
+    var(--text-primary) 80%,
+    color-mix(in srgb, var(--text-primary) 80%, transparent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   text-shadow: var(--title-text-shadow);
+  /* Drop the fake glow on the foreground (text-fill-color hides it)
+     and apply it via a pseudo-element so the gradient still shows. */
+  position: relative;
   animation: titleFade 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) both;
 }
+.title::after {
+  /* Short accent underline, ~30% of the title width. */
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  width: 30%;
+  height: 2px;
+  transform: translateX(-50%);
+  background: var(--accent);
+  border-radius: 2px;
+  opacity: 0.85;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.title:hover::after { opacity: 1; width: 38%; transition: all 0.25s ease; }
 
 @keyframes titleFade {
   from { opacity: 0; transform: translateY(8px); }
@@ -307,6 +333,12 @@ body::before {
   margin-bottom: 40px;
   text-align: center;
   text-shadow: var(--subtitle-text-shadow);
+  animation: subtitleFade 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) 0.2s both;
+}
+
+@keyframes subtitleFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ===== Search panel (Edge-style Mica card) ===== */
@@ -321,9 +353,34 @@ body::before {
   padding: 16px;
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-md);
+  position: relative;
 }
-
-.search-panel::before { content: none; }
+/* Corner accent brackets — small L-shaped markers in the top-left
+   and bottom-right corners. Uses --panel-corner-accent so the user
+   can tune it per preset. Each preset exposes this variable. */
+.search-panel::before,
+.search-panel::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+  opacity: 0.85;
+}
+.search-panel::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid var(--panel-corner-accent);
+  border-left: 2px solid var(--panel-corner-accent);
+  border-top-left-radius: var(--radius-xl);
+}
+.search-panel::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid var(--panel-corner-accent);
+  border-right: 2px solid var(--panel-corner-accent);
+  border-bottom-right-radius: var(--radius-xl);
+}
 
 .search-tabs {
   display: flex;
