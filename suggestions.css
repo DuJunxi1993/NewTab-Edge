@@ -93,14 +93,22 @@
   background: rgba(0, 0, 0, 0.18);
   opacity: 0;
   pointer-events: none;
+  /* Visibility flips to hidden AFTER the close animation finishes —
+     otherwise the popover would vanish mid-fade and the close would
+     look instant. */
   visibility: hidden;
-  transition: opacity 0.18s ease;
+  transition:
+    opacity var(--panel-time-close) var(--panel-ease-close),
+    visibility 0s linear var(--panel-time-close);
 }
 html.theme-dark .history-popover { background: rgba(0, 0, 0, 0.32); }
 .history-popover.open {
   opacity: 1;
   pointer-events: auto;
   visibility: visible;
+  transition:
+    opacity var(--panel-time-open) var(--panel-ease-open),
+    visibility 0s linear 0s;
 }
 .history-popover[hidden] { display: none; }
 
@@ -116,11 +124,18 @@ html.theme-dark .history-popover { background: rgba(0, 0, 0, 0.32); }
   overflow: hidden;
   transform: translateY(-8px) scale(0.98);
   opacity: 0;
-  transition: transform 0.18s ease, opacity 0.18s ease;
+  /* The card itself has a slightly quicker open (380ms) than the
+     preview drawer; same Apple ease for consistency. */
+  transition:
+    transform var(--panel-time-close) var(--panel-ease-close),
+    opacity var(--panel-time-close) var(--panel-ease-close);
 }
 .history-popover.open .history-card {
   transform: translateY(0) scale(1);
   opacity: 1;
+  transition:
+    transform 380ms var(--panel-ease-open),
+    opacity 380ms var(--panel-ease-open);
 }
 .history-header {
   display: flex;

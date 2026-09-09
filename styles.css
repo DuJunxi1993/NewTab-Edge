@@ -404,38 +404,33 @@ html[data-pattern="radial"] .bg-pattern[data-pattern-layer="radial"] { opacity: 
      ancestor of a focused input frequently breaks IME composition
      (focus is lost every time the IME repaints). The translucent
      `var(--surface)` already gives a frosted-glass look. */
-  border: 1px solid var(--border);
-  padding: 16px;
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-md);
+  /* Hairline border (slightly tinted toward the surface so it doesn't
+     read as a hard outline on light themes). Replaces the previous
+     1px solid + corner-bracket combo, which felt busy. */
+  border: 0.75px solid color-mix(in srgb, var(--surface-solid) 60%, var(--border));
+  padding: 18px;
+  border-radius: 20px;
+  /* Tight shadow that hugs the panel rather than dropping it below
+     the page; combined with the inner highlight below, the panel
+     reads as a flush Mica card rather than a floating card. */
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.35) inset,    /* top inner highlight */
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 4px 12px rgba(0, 0, 0, 0.04);
   position: relative;
+  /* Smoother easing on the panel's own hover / focus transitions
+     so they feel of-a-piece with the rest of the UI. */
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
-/* Corner accent brackets — small L-shaped markers in the top-left
-   and bottom-right corners. Uses --panel-corner-accent so the user
-   can tune it per preset. Each preset exposes this variable. */
-.search-panel::before,
-.search-panel::after {
-  content: "";
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  pointer-events: none;
-  opacity: 0.85;
-}
-.search-panel::before {
-  top: -1px;
-  left: -1px;
-  border-top: 2px solid var(--panel-corner-accent);
-  border-left: 2px solid var(--panel-corner-accent);
-  border-top-left-radius: var(--radius-xl);
-}
-.search-panel::after {
-  bottom: -1px;
-  right: -1px;
-  border-bottom: 2px solid var(--panel-corner-accent);
-  border-right: 2px solid var(--panel-corner-accent);
-  border-bottom-right-radius: var(--radius-xl);
-}
+/* Per-theme top inner highlight override. Dark themes use a much
+   subtler light line; high-contrast uses no highlight. */
+html.theme-pure-light  .search-panel { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.04); }
+html.theme-sepia       .search-panel { box-shadow: 0 1px 0 rgba(255, 240, 210, 0.45) inset, 0 1px 2px rgba(80, 50, 20, 0.06), 0 4px 12px rgba(80, 50, 20, 0.06); }
+html.theme-solarized   .search-panel { box-shadow: 0 1px 0 rgba(253, 246, 227, 0.50) inset, 0 1px 2px rgba(7, 54, 66, 0.06), 0 4px 12px rgba(7, 54, 66, 0.06); }
+html.theme-edge-dark   .search-panel { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 1px 2px rgba(0, 0, 0, 0.20), 0 4px 12px rgba(0, 0, 0, 0.24); }
+html.theme-slate       .search-panel { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 1px 2px rgba(0, 0, 0, 0.24), 0 4px 12px rgba(0, 0, 0, 0.28); }
+html.theme-rosepine    .search-panel { box-shadow: 0 1px 0 rgba(235, 188, 186, 0.05) inset, 0 1px 2px rgba(0, 0, 0, 0.22), 0 4px 12px rgba(0, 0, 0, 0.26); }
+html.theme-high-contrast .search-panel { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.30) inset, 0 1px 2px rgba(0, 0, 0, 0.20); }
 
 .search-tabs {
   display: flex;

@@ -7,6 +7,35 @@
    ================================================ */
 
 /* Backdrop */
+/* ================================================
+   Panel backdrop (mask) + base panel.
+
+   Visibility transitions need a delay: when the panel closes we want
+   to hide it only AFTER the transform has finished animating, so the
+   user actually sees the panel slide out instead of vanishing
+   instantly. Same idea on the mask — its opacity fades to 0, and
+   visibility flips to hidden after the fade completes.
+
+   Easing:
+     - Open:   cubic-bezier(0.22, 1, 0.36, 1) — Apple EaseOutQuint.
+               Starts at full velocity and decelerates, giving the
+               "fling then settle" feel of modern motion design.
+     - Close:  cubic-bezier(0.55, 0, 0.55, 0.2) — sharper gather,
+               shorter so dismissal feels decisive.
+
+   Durations:
+     - Open:  420ms — long enough for the deceleration tail to read.
+     - Close: 280ms — quicker to clear the stage.
+   ================================================ */
+
+:root {
+  /* Shared motion timings — exposed so JS can use them if needed. */
+  --panel-ease-open:  cubic-bezier(0.22, 1, 0.36, 1);
+  --panel-ease-close: cubic-bezier(0.55, 0, 0.55, 0.2);
+  --panel-time-open:  420ms;
+  --panel-time-close: 280ms;
+}
+
 .panel-backdrop {
   position: fixed;
   inset: 0;
@@ -14,11 +43,16 @@
   background: rgba(0, 0, 0, 0.35);
   opacity: 0;
   pointer-events: none;
-  /* visibility: hidden removes the element from the compositing tree
-     entirely (backdrop-filter still applies while visibility is
-     "visible", which can break IME focus on inputs elsewhere). */
+  /* visibility flips to hidden 280ms after the close begins — i.e.
+     after the close transition completes. On open, visibility
+     flips immediately. The 0s delay on the "open" branch is
+     implicit because the .open class is added before any
+     transition can run. */
   visibility: hidden;
-  transition: opacity 0.22s ease, backdrop-filter 0.22s ease;
+  transition:
+    opacity var(--panel-time-close) var(--panel-ease-close),
+    backdrop-filter var(--panel-time-close) var(--panel-ease-close),
+    visibility 0s linear var(--panel-time-close);
   backdrop-filter: blur(4px) saturate(180%);
   -webkit-backdrop-filter: blur(4px) saturate(180%);
 }
@@ -27,6 +61,11 @@ html.theme-dark .panel-backdrop { background: rgba(0, 0, 0, 0.52); }
   opacity: 1;
   pointer-events: auto;
   visibility: visible;
+  /* Override the visibility transition for open: flip immediately. */
+  transition:
+    opacity var(--panel-time-open) var(--panel-ease-open),
+    backdrop-filter var(--panel-time-open) var(--panel-ease-open),
+    visibility 0s linear 0s;
 }
 
 /* Panel base */
@@ -39,15 +78,29 @@ html.theme-dark .panel-backdrop { background: rgba(0, 0, 0, 0.52); }
   flex-direction: column;
   pointer-events: none;
   /* Same rationale as .panel-backdrop: keep closed panels out of the
-     compositing tree so they can't disturb IME composition. */
+     compositing tree so they can't disturb IME composition. The
+     visibility transition is delayed until the close animation
+     finishes. */
   visibility: hidden;
+  transition: visibility 0s linear var(--panel-time-close);
 }
 .app-panel.open {
   pointer-events: auto;
   visibility: visible;
+  transition: visibility 0s linear 0s;
 }
 
-/* Layout variants */
+/* Layout variants — slide-from-edge.
+   On .open, transform animates with --panel-ease-open / --panel-time-open.
+   On close (no .open), transform reverses with the same property
+   declaration; since we want a sharper / quicker close, the actual
+   ease is split by overriding the transition below.
+   Because CSS transitions can only declare one easing/duration per
+   property at a time, we rely on the `transition` declaration on
+   the un-opened rule using the close timing, and the `transition`
+   override on .open using the open timing. The browser picks the
+   right one based on the rule that's in effect for the property
+   change. */
 .app-panel.slide-left {
   top: 0;
   left: 0;
@@ -56,7 +109,9 @@ html.theme-dark .panel-backdrop { background: rgba(0, 0, 0, 0.52); }
   max-width: 96vw;
   border-right: 1px solid var(--border);
   transform: translateX(-100%);
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition:
+    transform var(--panel-time-close) var(--panel-ease-close),
+    visibility 0s linear var(--panel-time-close);
 }
 .app-panel.slide-right {
   top: 0;
@@ -65,11 +120,16 @@ html.theme-dark .panel-backdrop { background: rgba(0, 0, 0, 0.52); }
   width: min(420px, 92vw);
   border-left: 1px solid var(--border);
   transform: translateX(100%);
-  transition: transform 0.32s cubic-bezier(0.2, 0.7, 0.3, 1);
+  transition:
+    transform var(--panel-time-close) var(--panel-ease-close),
+    visibility 0s linear var(--panel-time-close);
 }
 .app-panel.slide-left.open,
 .app-panel.slide-right.open {
   transform: translateX(0);
+  transition:
+    transform var(--panel-time-open) var(--panel-ease-open),
+    visibility 0s linear 0s;
 }
 .app-panel.center {
   top: 50%;
@@ -78,11 +138,18 @@ html.theme-dark .panel-backdrop { background: rgba(0, 0, 0, 0.52); }
   opacity: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
-  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.18s ease;
+  transition:
+    transform var(--panel-time-close) var(--panel-ease-close),
+    opacity var(--panel-time-close) var(--panel-ease-close),
+    visibility 0s linear var(--panel-time-close);
 }
 .app-panel.center.open {
   transform: translate(-50%, -50%) scale(1);
   opacity: 1;
+  transition:
+    transform var(--panel-time-open) var(--panel-ease-open),
+    opacity var(--panel-time-open) var(--panel-ease-open),
+    visibility 0s linear 0s;
 }
 
 /* Card inner */
