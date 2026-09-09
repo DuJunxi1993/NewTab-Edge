@@ -349,7 +349,9 @@ html[data-pattern="radial"] .bg-pattern[data-pattern-layer="radial"] { opacity: 
   line-height: 1.05;
   letter-spacing: -0.025em;
   text-align: center;
-  margin-bottom: 8px;
+  /* Room below the title for both the accent underline (~6px) and a
+     comfortable gap before the search panel starts. */
+  margin-bottom: 36px;
   /* --title-fill defaults to --text-primary but each preset can override
      it to a brighter / more saturated color so the title reads
      punchier on dark backgrounds. Earlier we used a 100%->80% vertical
@@ -365,11 +367,13 @@ html[data-pattern="radial"] .bg-pattern[data-pattern-layer="radial"] { opacity: 
   /* Adaptive accent underline. Width is set by fitTitleUnderline()
      in script.js via the --title-underline-w CSS variable; if the JS
      hasn't run yet we fall back to a sane default. The underline is
-     always centred under the title. */
+     always centred under the title. Sits 8px below the title text so
+     it reads as a tight accent, then 28px of breathing room before
+     the search panel starts. */
   content: "";
   position: absolute;
   left: 50%;
-  bottom: -10px;
+  bottom: -8px;
   width: var(--title-underline-w, 30%);
   height: 2px;
   transform: translateX(-50%);
