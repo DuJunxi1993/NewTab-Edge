@@ -35,8 +35,11 @@ corners, a single accent color, and quiet motion.
 
 - **8 theme presets** — Edge Blue, Edge Dark, Pure Light, Sepia, Solarized,
   Slate, High Contrast, and Rosé Pine. Each is a complete palette.
-- **Auto light/dark by local time** — toggle it on and pick which preset to use
-  during the day and which at night, plus the two switch-over times. The page
+- **Auto light/dark** — three modes: **off** (manual), **by time** (a daily
+  schedule with two switch-over times), and **follow system** (reads the
+  browser / OS `prefers-color-scheme` and updates instantly when you flip
+  Edge into dark mode). In both auto modes you pick the light preset and the
+  dark preset; the schedule only matters in "by time" mode. The page
   re-evaluates once a minute and whenever the tab becomes visible again.
 - **Custom accent color** — pick from 7 swatches or enter any HEX value;
   hover/pressed shades are derived automatically.

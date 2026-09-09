@@ -211,12 +211,18 @@ const DEFAULT_STATE = {
   themeMode: 'auto',  // 'auto' | 'light' | 'dark'
   themeId: 'edge-blue',     // see THEME_PRESETS
   accentOverride: null,     // hex string or null → use preset default
-  // Automatic light/dark switching by local time of day.
-  autoTheme: false,
-  autoLightThemeId: 'edge-blue',  // preset used during the day
-  autoDarkThemeId: 'edge-dark',   // preset used at night
-  autoLightStart: '07:00',        // day begins
-  autoDarkStart: '19:00',         // night begins
+  // Automatic light/dark switching. Three modes:
+  //   'off'    — manual, the user picks the theme above
+  //   'time'   — switch by a daily schedule (autoLightStart →
+  //              autoDarkStart). User picks the light/dark presets.
+  //   'system' — follow the browser / OS prefers-color-scheme
+  //              (prefers-color-scheme: dark → autoDarkThemeId,
+  //              light → autoLightThemeId). Times are irrelevant.
+  themeAutoMode: 'off',
+  autoLightThemeId: 'edge-blue',  // light-side preset
+  autoDarkThemeId: 'edge-dark',   // dark-side preset
+  autoLightStart: '07:00',        // day begins (time mode only)
+  autoDarkStart: '19:00',         // night begins (time mode only)
   customTitle: '',
   rainbowMode: 'off',  // 'off' | 'vivid' | 'soft' | 'morandi'
   visibleEngines: null, // null = use default (all engines visible)
@@ -928,7 +934,21 @@ async function init() {
       }
     }
     // Normalise the auto light/dark schedule.
-    state.autoTheme = !!state.autoTheme;
+    // Migrate the old boolean (autoTheme: true/false) to the new
+    // tri-state string. Anything previously enabled becomes 'time';
+    // anything disabled becomes 'off'. 'system' is new and won't
+    // appear in legacy data.
+    if (state.themeAutoMode === true) state.themeAutoMode = 'time';
+    else if (state.themeAutoMode === false || state.themeAutoMode == null) {
+      state.themeAutoMode = 'off';
+    } else if (!['off', 'time', 'system'].includes(state.themeAutoMode)) {
+      state.themeAutoMode = 'off';
+    }
+    // Also: a legacy `autoTheme` boolean field (from the previous
+    // commit) survives the spread above. Map it in the same pass.
+    if (state.autoTheme === true && state.themeAutoMode === 'off') {
+      state.themeAutoMode = 'time';
+    }
     if (!THEME_PRESETS.some((p) => p.id === state.autoLightThemeId)) {
       state.autoLightThemeId = 'edge-blue';
     }
@@ -1025,7 +1045,8 @@ document.addEventListener('visibilitychange', () => {
   // Coming back from sleep / another tab may have crossed a schedule
   // boundary, so re-check the auto light/dark theme immediately
   // instead of waiting for the next minute tick.
-  if (state.autoTheme && appliedThemeId !== null && resolveThemeId() !== appliedThemeId) {
+  if (state.themeAutoMode && state.themeAutoMode !== 'off' &&
+      appliedThemeId !== null && resolveThemeId() !== appliedThemeId) {
     applyTheme();
   }
 });
@@ -1176,17 +1197,38 @@ function isDaytime(now) {
   return mins >= ls || mins < ds; // wraps midnight
 }
 
-// The theme actually in effect right now. When auto switching is off
-// this is just the user's manual pick.
+// What colour is the browser / OS currently in? Used by the
+// 'system' auto-theme mode. The matchMedia query is re-evaluated
+// each call so the result always reflects the current preference.
+function isSystemDark() {
+  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+// The theme actually in effect right now. Resolves:
+//   'off'    → the user's manual pick
+//   'time'   → schedule-based: day uses autoLightThemeId, night uses
+//              autoDarkThemeId
+//   'system' → OS-based: prefers-color-scheme: dark → autoDarkThemeId,
+//              light → autoLightThemeId
 function resolveThemeId(now) {
   const fallback = THEME_PRESETS.some((p) => p.id === state.themeId)
     ? state.themeId
     : THEME_PRESETS[0].id;
-  if (!state.autoTheme) return fallback;
-  const day = isDaytime(now || new Date());
-  const want = day ? state.autoLightThemeId : state.autoDarkThemeId;
+  const mode = state.themeAutoMode;
+  if (mode === 'off' || mode == null) return fallback;
+  let want;
+  if (mode === 'time') {
+    want = isDaytime(now || new Date())
+      ? state.autoLightThemeId
+      : state.autoDarkThemeId;
+  } else if (mode === 'system') {
+    want = isSystemDark() ? state.autoDarkThemeId : state.autoLightThemeId;
+  } else {
+    return fallback;
+  }
   if (THEME_PRESETS.some((p) => p.id === want)) return want;
-  return day ? 'edge-blue' : 'edge-dark';
+  return fallback;
 }
 
 // The preset id currently painted on <html>. Tracked so the auto
@@ -1232,12 +1274,14 @@ function applyTheme() {
   document.querySelectorAll('[data-theme-pick]').forEach((el) => {
     el.classList.toggle('active', el.dataset.themePick === preset.id);
   });
-  // While auto switching is on, the manual grid is inert — the two
-  // selects in the auto section drive the theme instead.
-  if (grid) grid.classList.toggle('auto-disabled', !!state.autoTheme);
+  // While auto switching is on, the manual grid is inert — the auto
+  // section's presets and (for 'time') the schedule drive the theme
+  // instead.
+  const autoOn = state.themeAutoMode && state.themeAutoMode !== 'off';
+  if (grid) grid.classList.toggle('auto-disabled', autoOn);
   const gridHint = document.getElementById('themeGridHint');
   if (gridHint) {
-    gridHint.textContent = state.autoTheme
+    gridHint.textContent = autoOn
       ? '自动切换中 · 由下方「自动明暗」的配置决定'
       : '8 套主题预设 · 覆盖页面所有色板';
   }
@@ -1358,7 +1402,10 @@ function renderThemePicker() {
   grid.innerHTML = '';
   // Preserve the auto-switching lock: the grid is rebuilt whenever the
   // picker renders, which happens after applyTheme() in init().
-  grid.classList.toggle('auto-disabled', !!state.autoTheme);
+  grid.classList.toggle(
+    'auto-disabled',
+    !!(state.themeAutoMode && state.themeAutoMode !== 'off')
+  );
   THEME_PRESETS.forEach((p) => {
     const card = document.createElement('button');
     card.type = 'button';
@@ -1471,22 +1518,36 @@ function bindThemeControls() {
 
 // ----- Auto light/dark controls -----
 
-// Human-readable summary shown under the toggle.
+// Human-readable summary shown under the segmented control.
 function autoThemeHintText() {
-  if (!state.autoTheme) return '关闭中 · 使用上方手动选择的主题';
+  if (state.themeAutoMode === 'off' || !state.themeAutoMode) {
+    return '关闭中 · 使用上方手动选择的主题';
+  }
+  if (state.themeAutoMode === 'system') {
+    const dark = isSystemDark();
+    const id = dark ? state.autoDarkThemeId : state.autoLightThemeId;
+    const preset = THEME_PRESETS.find((p) => p.id === id);
+    return `跟系统中：${dark ? '暗色' : '亮色'} · ${preset ? preset.label : id}`;
+  }
+  // 'time' mode
   const day = isDaytime(new Date());
   const id = day ? state.autoLightThemeId : state.autoDarkThemeId;
   const preset = THEME_PRESETS.find((p) => p.id === id);
-  return `当前：${day ? '白天' : '夜间'} · ${preset ? preset.label : id}`;
+  return `按时段中：${day ? '白天' : '夜间'} · ${preset ? preset.label : id}`;
 }
 
 // Push state into the controls without firing change events. Called
 // from applyTheme() so the panel always reflects reality.
 function syncAutoThemeControls() {
-  const toggle = document.getElementById('autoThemeToggle');
-  if (toggle) toggle.checked = !!state.autoTheme;
+  const mode = state.themeAutoMode || 'off';
+  document.querySelectorAll('.theme-auto-tab').forEach((b) => {
+    b.classList.toggle('active', b.dataset.themeAuto === mode);
+  });
   const cfg = document.getElementById('autoThemeConfig');
-  if (cfg) cfg.classList.toggle('hidden', !state.autoTheme);
+  if (cfg) {
+    cfg.classList.toggle('hidden', mode === 'off');
+    cfg.setAttribute('data-mode', mode);
+  }
   const lightSel = document.getElementById('autoLightTheme');
   if (lightSel) lightSel.value = state.autoLightThemeId;
   const darkSel = document.getElementById('autoDarkTheme');
@@ -1517,15 +1578,17 @@ function renderAutoThemeControls() {
 
   if (!autoThemeControlsBound) {
     autoThemeControlsBound = true;
-    const toggle = document.getElementById('autoThemeToggle');
-    if (toggle) {
-      toggle.addEventListener('change', () => {
-        state.autoTheme = toggle.checked;
+    document.querySelectorAll('.theme-auto-tab').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const next = btn.dataset.themeAuto;
+        if (!next) return;
+        state.themeAutoMode = next;
         applyTheme();
         persist();
-        toast(state.autoTheme ? '已开启自动明暗' : '已关闭自动明暗');
+        const labels = { off: '关闭自动', time: '按时段自动', system: '跟系统自动' };
+        toast(labels[next] || '已切换');
       });
-    }
+    });
     if (lightSel) {
       lightSel.addEventListener('change', () => {
         state.autoLightThemeId = lightSel.value;
@@ -1566,9 +1629,25 @@ function renderAutoThemeControls() {
 // `appliedThemeId === null` guard skips the tick before init() has
 // painted the first theme.
 setInterval(() => {
-  if (!state.autoTheme || appliedThemeId === null) return;
+  if (state.themeAutoMode === 'off' || state.themeAutoMode == null) return;
+  if (appliedThemeId === null) return;
   if (resolveThemeId() !== appliedThemeId) applyTheme();
 }, 60_000);
+
+// In 'system' mode the user can flip the OS / browser dark-mode
+// preference at any time, not just on the minute. Listen for the
+// change and re-apply immediately. Only wired in 'system' mode so
+// other modes never waste cycles on a no-op event.
+if (typeof window !== 'undefined' && window.matchMedia) {
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  const handler = () => {
+    if (state.themeAutoMode !== 'system') return;
+    if (appliedThemeId === null) return;
+    if (resolveThemeId() !== appliedThemeId) applyTheme();
+  };
+  if (mq.addEventListener) mq.addEventListener('change', handler);
+  else if (mq.addListener) mq.addListener(handler);
+}
 
 function applyRainbow() {
   const mode = state.rainbowMode || 'off';

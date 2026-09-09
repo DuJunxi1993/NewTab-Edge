@@ -201,13 +201,11 @@
         <!-- Auto light/dark by local time -->
         <div class="setting-group">
           <label class="setting-label">AUTO THEME // 自动明暗</label>
-          <label class="cyber-switch">
-            <input type="checkbox" id="autoThemeToggle" />
-            <span class="cyber-switch-track" aria-hidden="true">
-              <span class="cyber-switch-thumb"></span>
-            </span>
-            <span class="cyber-switch-text">按本地时段自动切换</span>
-          </label>
+          <div class="segmented" id="themeAutoMode">
+            <button class="seg-btn theme-auto-tab" data-theme-auto="off" type="button">关闭</button>
+            <button class="seg-btn theme-auto-tab" data-theme-auto="time" type="button">按时段</button>
+            <button class="seg-btn theme-auto-tab" data-theme-auto="system" type="button">跟系统</button>
+          </div>
           <div class="auto-theme-config hidden" id="autoThemeConfig">
             <div class="auto-row">
               <label class="auto-row-label" for="autoLightTheme">白天主题</label>
@@ -217,11 +215,11 @@
               <label class="auto-row-label" for="autoDarkTheme">夜间主题</label>
               <select id="autoDarkTheme" class="cyber-input cyber-select"></select>
             </div>
-            <div class="auto-row">
+            <div class="auto-row auto-row-time" id="autoLightStartRow">
               <label class="auto-row-label" for="autoLightStart">白天开始</label>
               <input type="time" id="autoLightStart" class="cyber-input" value="07:00" />
             </div>
-            <div class="auto-row">
+            <div class="auto-row auto-row-time" id="autoDarkStartRow">
               <label class="auto-row-label" for="autoDarkStart">夜间开始</label>
               <input type="time" id="autoDarkStart" class="cyber-input" value="19:00" />
             </div>

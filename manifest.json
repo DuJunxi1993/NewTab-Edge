@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "NewTab - Edge",
-  "version": "1.4.0",
-  "description": "A Windows 11 / Edge-styled new tab page: 8 theme presets with custom accent color, wallpapers and gradients, geometric background patterns, multi-engine search (Baidu/Bing/Google/GitHub/威科/Bilibili) with live suggestions, search history, an inline results preview drawer, and a tools panel (calculator, base converter, color picker, JSON formatter, etc).",
+  "version": "1.5.0",
+  "description": "A Windows 11 / Edge-styled new tab page: 8 theme presets with custom accent color, auto light/dark by time or by system preference, wallpapers and gradients, geometric background patterns, multi-engine search (Baidu/Bing/Google/GitHub/威科/Bilibili) with live suggestions, search history, an inline results preview drawer, and a tools panel (calculator, base converter, color picker, JSON formatter, etc).",
   "chrome_url_overrides": {
     "newtab": "newtab.html"
   },

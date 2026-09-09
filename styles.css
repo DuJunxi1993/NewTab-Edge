@@ -797,56 +797,7 @@ html.theme-high-contrast .search-panel { box-shadow: 0 0 0 1px rgba(255, 255, 25
   outline: none;
 }
 
-/* ----- Auto light/dark switch + config ----- */
-.cyber-switch {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  user-select: none;
-  padding: 2px 0;
-}
-.cyber-switch input[type="checkbox"] {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-.cyber-switch-track {
-  position: relative;
-  flex-shrink: 0;
-  width: 38px;
-  height: 20px;
-  border-radius: 999px;
-  background: var(--surface-pressed);
-  border: 1px solid var(--border-strong);
-  transition: background 0.18s ease, border-color 0.18s ease;
-}
-.cyber-switch-thumb {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--surface-solid);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.cyber-switch input:checked + .cyber-switch-track {
-  background: var(--accent);
-  border-color: var(--accent);
-}
-.cyber-switch input:checked + .cyber-switch-track .cyber-switch-thumb {
-  transform: translateX(18px);
-}
-.cyber-switch input:focus-visible + .cyber-switch-track {
-  box-shadow: var(--focus-ring);
-}
-.cyber-switch-text {
-  font-size: 13px;
-  color: var(--text-primary);
-}
+/* ----- Auto light/dark config (uses .segmented + .seg-btn) ----- */
 
 .auto-theme-config {
   display: flex;
@@ -859,6 +810,12 @@ html.theme-high-contrast .search-panel { box-shadow: 0 0 0 1px rgba(255, 255, 25
   border-radius: var(--radius-md);
 }
 .auto-theme-config.hidden { display: none; }
+/* Time rows are dimmed (not hidden) in 'system' mode so the user can
+   still see what the schedule would be, just not interact with it. */
+.auto-theme-config[data-mode="system"] .auto-row-time {
+  opacity: 0.45;
+  pointer-events: none;
+}
 .auto-row {
   display: flex;
   align-items: center;

@@ -160,6 +160,10 @@
     if (h > 23 || min > 59) return null;
     return h * 60 + min;
   }
+  function isSystemDark() {
+    if (typeof window === 'undefined' || !window.matchMedia) return false;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
   function isDaytime(now) {
     const ls = parseHHMM(state.autoLightStart);
     const ds = parseHHMM(state.autoDarkStart);
@@ -170,28 +174,38 @@
     if (a < b) return mins >= a && mins < b;
     return mins >= a || mins < b;
   }
+  // Mirror of script.js:resolveThemeId(). The popup is a separate
+  // document and can't reach into the new-tab page.
   function effectiveThemeId() {
     const fallback = THEMES.some((t) => t.id === state.themeId) ? state.themeId : 'edge-blue';
-    if (!state.autoTheme) return fallback;
-    const day = isDaytime(new Date());
-    const want = day ? state.autoLightThemeId : state.autoDarkThemeId;
+    const mode = state.themeAutoMode;
+    if (!mode || mode === 'off') return fallback;
+    let want;
+    if (mode === 'time') {
+      want = isDaytime(new Date()) ? state.autoLightThemeId : state.autoDarkThemeId;
+    } else if (mode === 'system') {
+      want = isSystemDark() ? state.autoDarkThemeId : state.autoLightThemeId;
+    } else {
+      return fallback;
+    }
     if (THEMES.some((t) => t.id === want)) return want;
-    return day ? 'edge-blue' : 'edge-dark';
+    return fallback;
   }
 
   // ----- Theme grid -----
   function renderThemes() {
     themeGrid.innerHTML = '';
     const effective = effectiveThemeId();
+    const autoOn = state.themeAutoMode && state.themeAutoMode !== 'off';
     // When auto switching drives the theme, the manual grid is
     // informational only — the settings panel owns the schedule.
-    themeGrid.classList.toggle('locked', !!state.autoTheme);
+    themeGrid.classList.toggle('locked', autoOn);
     THEMES.forEach((t) => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'theme-card';
       btn.dataset.themeId = t.id;
-      btn.title = state.autoTheme
+      btn.title = autoOn
         ? `${t.label}（自动明暗中，请在设置面板配置）`
         : t.label;
       if (effective === t.id) btn.classList.add('active');
@@ -212,7 +226,7 @@
 
       btn.append(dot, name);
       btn.addEventListener('click', () => {
-        if (state.autoTheme) {
+        if (autoOn) {
           setStatus('自动明暗已开启，请先在设置面板关闭', false);
           return;
         }
@@ -358,7 +372,11 @@
       if (!RAINBOW_TIERS.includes(state.rainbowMode)) state.rainbowMode = 'off';
       if (!PATTERNS.includes(state.bgPattern)) state.bgPattern = 'off';
       if (!Array.isArray(state.history)) state.history = [];
-      state.autoTheme = !!state.autoTheme;
+      // Normalise the auto-theme mode (legacy 'autoTheme' boolean is
+      // mapped by script.js; here we just defend against bad data).
+      if (!['off', 'time', 'system'].includes(state.themeAutoMode)) {
+        state.themeAutoMode = state.autoTheme ? 'time' : 'off';
+      }
       if (!THEMES.some((t) => t.id === state.autoLightThemeId)) state.autoLightThemeId = 'edge-blue';
       if (!THEMES.some((t) => t.id === state.autoDarkThemeId)) state.autoDarkThemeId = 'edge-dark';
 
