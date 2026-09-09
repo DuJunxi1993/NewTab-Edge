@@ -1089,6 +1089,113 @@ function setAccentOverride(hex) {
   persist();
 }
 
+function renderThemePicker() {
+  const grid = document.getElementById('themeGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  THEME_PRESETS.forEach((p) => {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'theme-card';
+    card.dataset.themePick = p.id;
+    card.title = p.label;
+
+    const swatch = document.createElement('span');
+    swatch.className = 'theme-card-swatch';
+    // Each card is a tiny preview: the accent dot + a textured
+    // background that reflects the preset's surface / text colours.
+    swatch.style.background =
+      p.mode === 'dark'
+        ? 'linear-gradient(135deg, #1f2030 0%, #2a2c3a 100%)'
+        : 'linear-gradient(135deg, #ffffff 0%, #f0f0f5 100%)';
+    const dot = document.createElement('span');
+    dot.className = 'theme-card-dot';
+    // We'll override this dot color in applyTheme() with the live
+    // --accent for the active card so it reflects the actual palette.
+    dot.dataset.role = 'accent';
+    swatch.appendChild(dot);
+
+    const lbl = document.createElement('span');
+    lbl.className = 'theme-card-label';
+    lbl.textContent = p.label;
+
+    const mode = document.createElement('span');
+    mode.className = 'theme-card-mode';
+    mode.textContent = p.mode === 'dark' ? '暗' : '亮';
+
+    card.append(swatch, lbl, mode);
+    card.addEventListener('click', () => setTheme(p.id));
+    grid.appendChild(card);
+  });
+  // Set the accent dot on each card to match its preset's accent.
+  // We resolve the var via a temporary DOM probe so the preview reads
+  // the same value the page will use.
+  requestAnimationFrame(() => {
+    const probe = document.createElement('div');
+    probe.style.position = 'absolute';
+    probe.style.visibility = 'hidden';
+    document.body.appendChild(probe);
+    THEME_PRESETS.forEach((p) => {
+      probe.className = 'theme-' + p.id;
+      const c = getComputedStyle(probe).getPropertyValue('--accent').trim();
+      const dot = grid.querySelector(`.theme-card[data-theme-pick="${p.id}"] .theme-card-dot`);
+      if (dot && c) dot.style.background = c;
+      probe.className = '';
+    });
+    probe.remove();
+  });
+}
+
+function renderAccentSwatches() {
+  const root = document.getElementById('accentSwatches');
+  if (!root) return;
+  root.innerHTML = '';
+  ACCENT_SWATCHES.forEach((s) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'accent-swatch';
+    btn.dataset.accent = s.value;
+    btn.title = s.value;
+    btn.style.background = s.value;
+    root.appendChild(btn);
+    btn.addEventListener('click', () => setAccentOverride(s.value));
+  });
+  // "Default" tile (empty accent = preset default)
+  const def = document.createElement('button');
+  def.type = 'button';
+  def.className = 'accent-swatch accent-default';
+  def.dataset.accent = '';
+  def.title = '使用主题默认色';
+  def.textContent = 'A';
+  root.appendChild(def);
+  def.addEventListener('click', () => setAccentOverride(null));
+}
+
+function bindAccentInput() {
+  const input = document.getElementById('accentCustomInput');
+  const clearBtn = document.getElementById('accentClearBtn');
+  if (input) {
+    input.addEventListener('input', () => {
+      const v = input.value.trim();
+      if (v === '') return; // wait for blur / explicit clear
+      setAccentOverride(v);
+    });
+    input.addEventListener('blur', () => {
+      const v = input.value.trim();
+      if (v === '' || /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(v)) return;
+      // Revert to last good value
+      input.value = state.accentOverride || '';
+      toast('HEX 格式错误，例如 #0067c0', true);
+    });
+  }
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      if (input) input.value = '';
+      setAccentOverride(null);
+    });
+  }
+}
+
 function bindThemeControls() {
   document.querySelectorAll('.theme-tab').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -1102,6 +1209,9 @@ function bindThemeControls() {
       persist();
     });
   });
+  renderThemePicker();
+  renderAccentSwatches();
+  bindAccentInput();
 }
 
 function applyRainbow() {

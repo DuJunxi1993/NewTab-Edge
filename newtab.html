@@ -155,11 +155,19 @@
         <!-- Theme picker -->
         <div class="setting-group">
           <label class="setting-label">THEME // 主题</label>
-          <div class="segmented">
-            <button class="seg-btn theme-tab active" data-theme="auto">AUTO</button>
-            <button class="seg-btn theme-tab" data-theme="light">LIGHT</button>
-            <button class="seg-btn theme-tab" data-theme="dark">DARK</button>
+          <div class="theme-grid" id="themeGrid"></div>
+          <div class="hint">8 套主题预设 · 覆盖页面所有色板</div>
+        </div>
+
+        <!-- Accent color -->
+        <div class="setting-group">
+          <label class="setting-label">ACCENT // 主题色</label>
+          <div class="accent-swatches" id="accentSwatches"></div>
+          <div class="accent-custom-row">
+            <input type="text" id="accentCustomInput" class="cyber-input" placeholder="#0067c0" maxlength="7" />
+            <button class="accent-clear" id="accentClearBtn" type="button" title="恢复主题默认色">清空</button>
           </div>
+          <div class="hint">留空使用当前主题自带的强调色</div>
         </div>
 
         <!-- Rainbow mode -->
