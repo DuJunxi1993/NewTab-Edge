@@ -203,7 +203,10 @@ html[data-pattern="radial"] .bg-pattern[data-pattern-layer="radial"] { opacity: 
   display: flex;
   justify-content: space-between;
   align-items: center;
-  z-index: 20;
+  /* z-index: 5 — see .hud-bottom for the rationale. Sits below the
+     search row + panels so it never gets in the way of the
+     autocomplete dropdown or any panel. */
+  z-index: 5;
 }
 
 .hud-status {
@@ -279,7 +282,12 @@ html[data-pattern="radial"] .bg-pattern[data-pattern-layer="radial"] { opacity: 
   padding: 16px;
   display: flex;
   justify-content: center;
-  z-index: 20;
+  /* z-index: 5 — sits above the wallpaper layers (z -3..-1) and
+     the bg-pattern (-2) but BELOW the search row (z 30) and any
+     panels (z 200+). This way the search-row's suggest-list always
+     paints over the clock button, regardless of paint-time vs
+     hit-test quirks in different browsers. */
+  z-index: 5;
 }
 
 .hud-footer-text {

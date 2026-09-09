@@ -26,7 +26,10 @@
   box-shadow: var(--shadow-md);
   max-height: 320px;
   overflow-y: auto;
-  z-index: 25;
+  /* z-index: 50 — sits well above any HUD element (which we cap at
+     z 5 in styles.css) so the dropdown never gets visually or
+     interactively covered by the bottom time button. */
+  z-index: 50;
 }
 .suggest-list[hidden] { display: none; }
 .suggest-item {
