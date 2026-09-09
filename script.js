@@ -940,7 +940,11 @@ window.addEventListener('pageshow', () => focusInput({ force: true }));
 requestAnimationFrame(() => focusInput({ force: true }));
 
 const RAINBOW_PALETTES = {
-  vivid:   ['#00e5ff', '#ff2e88', '#ffd60a', '#9dff3c', '#ff7a00', '#b26bff', '#00ff9d'],
+  // Vivid desaturated ~20% from the original neon set: yellow
+  // #ffd60a becomes #d4b454 (no longer bleeds on white), pink
+  // #ff2e88 becomes #d96aa0, etc. This is what fixes the "刺眼"
+  // complaint while keeping the same playful intent.
+  vivid:   ['#5cc9d8', '#d96aa0', '#d4b454', '#8acf63', '#d6884a', '#a98ce0', '#5cd49a'],
   soft:    ['#7fd4e6', '#ef9ec4', '#ecd98a', '#b8d9a1', '#e5b48f', '#b3a6df', '#8fdcbe'],
   morandi: ['#8aa8b5', '#c2a0ac', '#c9b98f', '#a5b29a', '#c2a48c', '#a8a0bd', '#99b3a8'],
 };

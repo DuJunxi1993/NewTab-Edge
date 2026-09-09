@@ -1233,86 +1233,78 @@ body.tools-open .hud-top #settingsBtn { display: none; }
    Rainbow mode (opt-in, toggled from settings)
    Three intensity tiers, each engine tab gets its
    own color; the search button becomes a gradient.
-   Tier 1 "vivid" = high-saturation neon, tier 2
-   "soft" = low saturation, tier 3 "morandi" = grey
-   muted tones. Page background and panels are
-   unaffected.
+   /* ================================================
+   Rainbow mode palette overlays.
+
+   Three modes (vivid / soft / morandi) tint the engine tabs and the
+   search button. vivid is deliberately desaturated ~20% vs the
+   previous version so it stops bleeding into surrounding text on
+   light backgrounds. soft / morandi blend with whatever accent the
+   user picked — not a fixed RGB triplet — so soft-on-sepia and
+   soft-on-edge-blue read like two different palettes.
    ================================================ */
-/* Tier 1 — vivid (original neon) */
-html[data-rainbow="vivid"] .tab[data-engine="baidu"] { color: #00e5ff; }
-html[data-rainbow="vivid"] .tab[data-engine="bing"] { color: #ff2e88; }
-html[data-rainbow="vivid"] .tab[data-engine="google"] { color: #ffd60a; }
-html[data-rainbow="vivid"] .tab[data-engine="github"] { color: #9dff3c; }
-html[data-rainbow="vivid"] .tab[data-engine="wkinfo"] { color: #ff7a00; }
-html[data-rainbow="vivid"] .tab[data-engine="bilibili"] { color: #fb7299; }
-html[data-rainbow="vivid"] .tab[data-engine="baidu"].active { color: #00e5ff; }
-html[data-rainbow="vivid"] .tab[data-engine="bing"].active { color: #ff2e88; }
-html[data-rainbow="vivid"] .tab[data-engine="google"].active { color: #ffd60a; }
-html[data-rainbow="vivid"] .tab[data-engine="github"].active { color: #9dff3c; }
-html[data-rainbow="vivid"] .tab[data-engine="wkinfo"].active { color: #ff7a00; }
-html[data-rainbow="vivid"] .tab[data-engine="bilibili"].active { color: #fb7299; }
+html[data-rainbow="vivid"] .tab[data-engine="baidu"] { color: #5cc9d8; }
+html[data-rainbow="vivid"] .tab[data-engine="bing"] { color: #d96aa0; }
+html[data-rainbow="vivid"] .tab[data-engine="google"] { color: #d4b454; }
+html[data-rainbow="vivid"] .tab[data-engine="github"] { color: #8acf63; }
+html[data-rainbow="vivid"] .tab[data-engine="wkinfo"] { color: #d6884a; }
+html[data-rainbow="vivid"] .tab[data-engine="bilibili"] { color: #d57a96; }
 html[data-rainbow="vivid"] .search-btn {
-  background: linear-gradient(90deg, #ff2e88, #ff7a00, #ffd60a);
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--accent) 70%, #d96aa0),
+    color-mix(in srgb, var(--accent) 70%, #d6884a),
+    color-mix(in srgb, var(--accent) 70%, #d4b454));
   border: none;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 html[data-rainbow="vivid"] .search-btn:hover {
-  background: linear-gradient(90deg, #ff4d9e, #ff8f33, #ffe14d);
-  filter: brightness(1.05);
+  filter: brightness(1.06);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 45%, transparent);
 }
 html[data-rainbow="vivid"] .search-btn:active {
-  background: linear-gradient(90deg, #e0257c, #e86a00, #e6c000);
-  filter: brightness(0.95);
+  filter: brightness(0.92);
 }
-/* Tier 2 — soft (low saturation) */
-html[data-rainbow="soft"] .tab[data-engine="baidu"] { color: #7fd4e6; }
-html[data-rainbow="soft"] .tab[data-engine="bing"] { color: #ef9ec4; }
-html[data-rainbow="soft"] .tab[data-engine="google"] { color: #ecd98a; }
-html[data-rainbow="soft"] .tab[data-engine="github"] { color: #b8d9a1; }
-html[data-rainbow="soft"] .tab[data-engine="wkinfo"] { color: #e5b48f; }
-html[data-rainbow="soft"] .tab[data-engine="bilibili"] { color: #f3b3c4; }
-html[data-rainbow="soft"] .tab[data-engine="baidu"].active { color: #7fd4e6; }
-html[data-rainbow="soft"] .tab[data-engine="bing"].active { color: #ef9ec4; }
-html[data-rainbow="soft"] .tab[data-engine="google"].active { color: #ecd98a; }
-html[data-rainbow="soft"] .tab[data-engine="github"].active { color: #b8d9a1; }
-html[data-rainbow="soft"] .tab[data-engine="wkinfo"].active { color: #e5b48f; }
-html[data-rainbow="soft"] .tab[data-engine="bilibili"].active { color: #f3b3c4; }
+/* search-panel border & focus-ring in vivid sync to the accent */
+html[data-rainbow="vivid"] .search-panel {
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+html[data-rainbow="vivid"] .search-row:focus-within {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+/* ----- soft — gentle tint, blends with preset accent ----- */
+html[data-rainbow="soft"] .tab[data-engine="baidu"] { color: color-mix(in srgb, var(--accent) 60%, #7fd4e6); }
+html[data-rainbow="soft"] .tab[data-engine="bing"] { color: color-mix(in srgb, var(--accent) 60%, #ef9ec4); }
+html[data-rainbow="soft"] .tab[data-engine="google"] { color: color-mix(in srgb, var(--accent) 60%, #ecd98a); }
+html[data-rainbow="soft"] .tab[data-engine="github"] { color: color-mix(in srgb, var(--accent) 60%, #b8d9a1); }
+html[data-rainbow="soft"] .tab[data-engine="wkinfo"] { color: color-mix(in srgb, var(--accent) 60%, #e5b48f); }
+html[data-rainbow="soft"] .tab[data-engine="bilibili"] { color: color-mix(in srgb, var(--accent) 60%, #f3b3c4); }
 html[data-rainbow="soft"] .search-btn {
-  background: linear-gradient(90deg, #ef9ec4, #e5b48f, #ecd98a);
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--accent) 40%, #ef9ec4),
+    color-mix(in srgb, var(--accent) 40%, #e5b48f),
+    color-mix(in srgb, var(--accent) 40%, #ecd98a));
   border: none;
 }
-html[data-rainbow="soft"] .search-btn:hover {
-  background: linear-gradient(90deg, #f2b0cd, #ecc2a3, #f0e1a3);
-  filter: brightness(1.05);
-}
-html[data-rainbow="soft"] .search-btn:active {
-  background: linear-gradient(90deg, #da8cb2, #cda07c, #d6c37a);
-  filter: brightness(0.95);
-}
-/* Tier 3 — morandi (grey muted) */
-html[data-rainbow="morandi"] .tab[data-engine="baidu"] { color: #8aa8b5; }
-html[data-rainbow="morandi"] .tab[data-engine="bing"] { color: #c2a0ac; }
-html[data-rainbow="morandi"] .tab[data-engine="google"] { color: #c9b98f; }
-html[data-rainbow="morandi"] .tab[data-engine="github"] { color: #a5b29a; }
-html[data-rainbow="morandi"] .tab[data-engine="wkinfo"] { color: #c2a48c; }
-html[data-rainbow="morandi"] .tab[data-engine="bilibili"] { color: #c69aa6; }
-html[data-rainbow="morandi"] .tab[data-engine="baidu"].active { color: #8aa8b5; }
-html[data-rainbow="morandi"] .tab[data-engine="bing"].active { color: #c2a0ac; }
-html[data-rainbow="morandi"] .tab[data-engine="google"].active { color: #c9b98f; }
-html[data-rainbow="morandi"] .tab[data-engine="github"].active { color: #a5b29a; }
-html[data-rainbow="morandi"] .tab[data-engine="wkinfo"].active { color: #c2a48c; }
-html[data-rainbow="morandi"] .tab[data-engine="bilibili"].active { color: #c69aa6; }
+html[data-rainbow="soft"] .search-btn:hover { filter: brightness(1.04); }
+html[data-rainbow="soft"] .search-btn:active { filter: brightness(0.95); }
+
+/* ----- morandi — muted, similar idea but more grey ----- */
+html[data-rainbow="morandi"] .tab[data-engine="baidu"] { color: color-mix(in srgb, var(--accent) 35%, #8aa8b5); }
+html[data-rainbow="morandi"] .tab[data-engine="bing"] { color: color-mix(in srgb, var(--accent) 35%, #c2a0ac); }
+html[data-rainbow="morandi"] .tab[data-engine="google"] { color: color-mix(in srgb, var(--accent) 35%, #c9b98f); }
+html[data-rainbow="morandi"] .tab[data-engine="github"] { color: color-mix(in srgb, var(--accent) 35%, #a5b29a); }
+html[data-rainbow="morandi"] .tab[data-engine="wkinfo"] { color: color-mix(in srgb, var(--accent) 35%, #c2a48c); }
+html[data-rainbow="morandi"] .tab[data-engine="bilibili"] { color: color-mix(in srgb, var(--accent) 35%, #c69aa6); }
 html[data-rainbow="morandi"] .search-btn {
-  background: linear-gradient(90deg, #c2a0ac, #c2a48c, #c9b98f);
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--accent) 20%, #c2a0ac),
+    color-mix(in srgb, var(--accent) 20%, #c2a48c),
+    color-mix(in srgb, var(--accent) 20%, #c9b98f));
   border: none;
 }
-html[data-rainbow="morandi"] .search-btn:hover {
-  background: linear-gradient(90deg, #cdafb9, #cdb29c, #d3c5a0);
-  filter: brightness(1.05);
-}
-html[data-rainbow="morandi"] .search-btn:active {
-  background: linear-gradient(90deg, #af8f9b, #af937d, #b5a67e);
-  filter: brightness(0.95);
-}
+html[data-rainbow="morandi"] .search-btn:hover { filter: brightness(1.04); }
+html[data-rainbow="morandi"] .search-btn:active { filter: brightness(0.95); }
 
 /* ----- Search engine visibility picker (settings panel) ----- */
 .engine-picker {
