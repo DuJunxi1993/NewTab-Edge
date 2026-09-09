@@ -838,6 +838,9 @@ function persist() {
     overlay.setAttribute('aria-hidden', 'true');
     document.getElementById('toolsBackdrop')?.classList.remove('open');
     document.documentElement.classList.remove('fullscreen-clock-active');
+    // Replay the page entrance animation so coming back from the
+    // big-clock view feels orchestrated, not abrupt.
+    replayPageEntrance();
   }
 
   trigger.addEventListener('click', open);
@@ -916,6 +919,11 @@ async function init() {
   applyRainbow();
   applyBgPattern();
   renderBgPatternPicker();
+  // Mark the entrance sequence as "playing" by leaving the
+  // html:not(.page-entered) selector in effect. After ~900ms (longer
+  // than the longest delay+duration) we add `.page-entered` so the
+  // CSS animations don't sit there pinned at their final state.
+  setTimeout(() => document.documentElement.classList.add('page-entered'), 1100);
   // No explicit searchInput.focus() here: the input has the `autofocus`
   // attribute, which the browser handles at parse time and which
   // cooperates better with Chromium's new-tab focus model. Calling
@@ -961,11 +969,34 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') focusInput({ force: true });
 });
 
-window.addEventListener('pageshow', () => focusInput({ force: true }));
+window.addEventListener('pageshow', (e) => {
+  focusInput({ force: true });
+  // BFCache restore (persisted=true) — replay the entrance animation.
+  if (e.persisted) replayPageEntrance();
+});
 
 // One extra claim after the first paint, in case the omnibox grabbed
 // focus back between `pageshow` and now.
 requestAnimationFrame(() => focusInput({ force: true }));
+
+// ---- Page entrance animation ----
+// CSS keyframes are gated on `html:not(.page-entered)`. After the
+// entrance sequence finishes we add `.page-entered` so subsequent
+// re-renders don't re-trigger the animation. To replay (e.g. when
+// exiting the fullscreen clock or restoring from BFCache), remove
+// the class, force a reflow, and add it back.
+function replayPageEntrance() {
+  const html = document.documentElement;
+  if (html.classList.contains('page-entered')) {
+    html.classList.remove('page-entered');
+    // Force reflow so the browser re-evaluates the :not(.page-entered)
+    // selector and restarts the CSS animations.
+    void html.offsetWidth;
+    html.classList.add('page-entered');
+  } else {
+    html.classList.add('page-entered');
+  }
+}
 
 const RAINBOW_PALETTES = {
   // Vivid desaturated ~20% from the original neon set: yellow
