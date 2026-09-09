@@ -1,9 +1,10 @@
 /* ================================================
    Shared panel framework (WinUI3 design language)
-   Used by Settings, Tools and AI panels. Each panel
-   is: .panel-backdrop + .app-panel(.slide-left |
-   .slide-right | .center) > .panel-card > header +
-   .panel-body. Segmented controls via .segmented.
+   Used by the Settings, Tools and search-preview
+   panels. Each panel is: .panel-backdrop +
+   .app-panel(.slide-left | .slide-right | .center)
+   > .panel-card > header + .panel-body.
+   Segmented controls via .segmented.
    ================================================ */
 
 /* Backdrop */

@@ -186,13 +186,6 @@ html[data-pattern="radial"] .bg-pattern[data-pattern-layer="radial"] { opacity: 
   50%      { transform: scale(1.03); opacity: 0.075; }
 }
 
-/* Hide cyberpunk overlays — Edge style doesn't use them */
-.scanlines,
-.vignette,
-.hud-corner {
-  display: none;
-}
-
 /* ===== Top bar ===== */
 .hud-top {
   position: fixed;
@@ -354,7 +347,7 @@ html[data-pattern="radial"] .bg-pattern[data-pattern-layer="radial"] { opacity: 
   padding: 120px 32px 100px;
 }
 
-/* ===== Title (refined sans-serif, no glitch) ===== */
+/* ===== Title ===== */
 .title {
   font-family: "Inter", "Segoe UI Variable", sans-serif;
   font-weight: 700;
@@ -1568,8 +1561,7 @@ html.fullscreen-clock-active .stage,
 html.fullscreen-clock-active .wallpaper-wrap,
 html.fullscreen-clock-active .wallpaper,
 html.fullscreen-clock-active .wallpaper-overlay,
-html.fullscreen-clock-active .scanlines,
-html.fullscreen-clock-active .vignette,
+html.fullscreen-clock-active .bg-pattern,
 html.fullscreen-clock-active .app-panel { display: none !important; }
 
 

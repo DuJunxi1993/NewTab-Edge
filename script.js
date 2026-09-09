@@ -51,7 +51,7 @@
 
 
 /* ================================================
-   Cyberpunk NewTab — Controller
+   NewTab — Controller
    ================================================ */
 
 // ---------- Built-in wallpapers (local presets + royalty-free Unsplash) ----------
@@ -254,6 +254,31 @@ const storage = {
     });
   },
 };
+
+// ---------- Cross-context sync ----------
+// The toolbar popup writes the same `state` object. When it does, an
+// already-open new-tab page should reflect the change without a
+// reload. `ignoreStorageUntil` suppresses the echo from our own
+// persist() writes so we don't re-apply state we just saved.
+let ignoreStorageUntil = 0;
+
+if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local' || !changes.state) return;
+    if (Date.now() < ignoreStorageUntil) return; // our own write
+    const next = changes.state.newValue;
+    if (!next || typeof next !== 'object') return;
+    state = { ...state, ...next };
+    applyTheme();
+    applyRainbow();
+    applyBgPattern();
+    applyWallpaper();
+    applyFilters();
+    applyCustomTitle();
+    renderEngineTabs();
+    renderEnginePicker();
+  });
+}
 
 // ---------- DOM refs ----------
 const $ = (sel) => document.querySelector(sel);
@@ -818,6 +843,9 @@ let persistTimer = null;
 function persist() {
   clearTimeout(persistTimer);
   persistTimer = setTimeout(() => {
+    // Suppress the storage.onChanged echo of our own write (see the
+    // cross-context sync listener above).
+    ignoreStorageUntil = Date.now() + 500;
     storage.set({ state });
   }, 250);
 }

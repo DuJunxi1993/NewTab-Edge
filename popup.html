@@ -2,26 +2,34 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
+  <title>NewTab</title>
   <style>
+    /* The popup mirrors the active new-tab theme. popup.js reads
+       state.themeId from chrome.storage.local and overrides these
+       variables with the matching palette before first paint. */
     :root {
-      --bg: #15151a;
-      --surface: #1d1d24;
-      --border: rgba(255, 255, 255, 0.08);
-      --text: #e8e8ee;
-      --text-dim: #9a9aa6;
-      --accent: #00d9ff;
-      --accent-dim: rgba(0, 217, 255, 0.12);
-      --ok: #2ee6a8;
-      --warn: #ff5d5d;
+      --accent: #0067c0;
+      --accent-light: rgba(0, 103, 192, 0.12);
+      --bg: #f3f3f3;
+      --surface: #ffffff;
+      --surface-hover: rgba(0, 0, 0, 0.04);
+      --border: rgba(0, 0, 0, 0.08);
+      --text: #1c1c1c;
+      --text-dim: #5d5d5d;
+      --text-tertiary: #8a8a8a;
+      --danger: #d13438;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      width: 260px;
-      font: 400 13px "Inter", "Segoe UI Variable", system-ui, sans-serif;
+      width: 300px;
+      font: 400 12px "Inter", "Segoe UI Variable", system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
-      padding: 14px;
+      padding: 12px;
+      -webkit-font-smoothing: antialiased;
     }
+
+    /* ----- Header ----- */
     .head {
       display: flex;
       align-items: center;
@@ -32,91 +40,256 @@
       width: 22px;
       height: 22px;
       border-radius: 6px;
-      background: var(--accent-dim);
-      border: 1px solid rgba(0, 217, 255, 0.35);
+      background: var(--accent-light);
+      border: 1px solid var(--border);
       display: grid;
       place-items: center;
       color: var(--accent);
+      flex-shrink: 0;
     }
     .head h1 {
       font-size: 13px;
       font-weight: 600;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
+      flex: 1;
     }
-    .site {
+    .head .mode {
+      font: 500 10px "JetBrains Mono", ui-monospace, monospace;
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text-tertiary);
+    }
+
+    /* ----- Section ----- */
+    .section { margin-bottom: 12px; }
+    .section:last-of-type { margin-bottom: 0; }
+    .section-label {
+      font: 600 10px "Inter", system-ui;
+      letter-spacing: 0.8px;
+      color: var(--text-tertiary);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    /* ----- Theme grid ----- */
+    .theme-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+    .theme-card {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 8px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 10px;
-      margin-bottom: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font: 500 11px "Inter", system-ui;
+      color: var(--text);
+      text-align: left;
+      transition: border-color 0.14s, background 0.14s, transform 0.1s;
     }
-    .site .domain {
-      font: 500 11px "JetBrains Mono", ui-monospace, monospace;
-      color: var(--accent);
+    .theme-card:hover { background: var(--surface-hover); }
+    .theme-card:active { transform: scale(0.97); }
+    .theme-card.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+    .theme-card .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 0 1.5px var(--surface);
+    }
+    .theme-card .name {
+      flex: 1;
+      min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .site .title {
-      font-size: 12px;
+
+    /* ----- Segmented ----- */
+    .segmented {
+      display: flex;
+      gap: 2px;
+      background: var(--surface-hover);
+      padding: 3px;
+      border-radius: 7px;
+    }
+    .seg-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
       color: var(--text-dim);
-      margin-top: 3px;
+      padding: 5px 2px;
+      font: 500 11px "Inter", system-ui;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.14s;
+      white-space: nowrap;
+    }
+    .seg-btn:hover { color: var(--text); background: var(--surface-hover); }
+    .seg-btn.active {
+      background: var(--surface);
+      color: var(--accent);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    }
+
+    /* ----- History ----- */
+    .history-list { display: flex; flex-direction: column; gap: 2px; }
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 7px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .history-item:hover { background: var(--surface-hover); }
+    .history-item .q {
+      flex: 1;
+      min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      font-size: 12px;
+    }
+    .history-item .eng {
+      flex-shrink: 0;
+      font: 500 9px "JetBrains Mono", ui-monospace, monospace;
+      padding: 1px 4px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+    }
+    .history-item .when {
+      flex-shrink: 0;
+      font: 400 10px "JetBrains Mono", ui-monospace, monospace;
+      color: var(--text-tertiary);
+    }
+    .history-item .rm {
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      display: grid;
+      place-items: center;
+      background: transparent;
+      border: none;
+      border-radius: 3px;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.12s, color 0.12s;
+      padding: 0;
+    }
+    .history-item:hover .rm { opacity: 1; }
+    .history-item .rm:hover { color: var(--danger); }
+    .empty {
+      padding: 10px 0;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    /* ----- Footer ----- */
+    .footer {
+      display: flex;
+      gap: 6px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
     }
     .btn {
-      width: 100%;
+      flex: 1;
       border: 1px solid var(--border);
       background: var(--surface);
       color: var(--text);
-      font: 500 13px "Inter", system-ui, sans-serif;
-      padding: 8px 12px;
-      border-radius: 8px;
+      font: 500 12px "Inter", system-ui, sans-serif;
+      padding: 7px 10px;
+      border-radius: 6px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      transition: all 0.15s ease;
+      gap: 5px;
+      transition: all 0.14s ease;
     }
-    .btn:hover:not(:disabled) {
+    .btn:hover {
       border-color: var(--accent);
       color: var(--accent);
-      background: var(--accent-dim);
+      background: var(--accent-light);
     }
-    .btn:disabled {
-      opacity: 0.45;
-      cursor: default;
-    }
+    .btn:active { transform: scale(0.98); }
     .status {
-      font-size: 12px;
-      margin-top: 10px;
-      min-height: 16px;
+      font-size: 11px;
+      margin-top: 8px;
+      min-height: 14px;
       text-align: center;
+      color: var(--text-tertiary);
     }
-    .status.ok { color: var(--ok); }
-    .status.warn { color: var(--warn); }
+    .status.ok { color: var(--accent); }
   </style>
 </head>
 <body>
   <div class="head">
     <span class="logo">
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z" />
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="16" rx="2"/>
+        <path d="M3 9h18M8 14h8"/>
       </svg>
     </span>
-    <h1>AI HUB</h1>
+    <h1>NewTab</h1>
+    <span class="mode" id="modeTag">—</span>
   </div>
 
-  <div class="site">
-    <div class="domain" id="siteDomain">—</div>
-    <div class="title" id="siteTitle">正在读取当前页面…</div>
+  <div class="section">
+    <div class="section-label">Theme // 主题</div>
+    <div class="theme-grid" id="themeGrid"></div>
   </div>
 
-  <button class="btn" id="addBtn" disabled type="button">
-    ＋ 添加到 AI Hub
-  </button>
+  <div class="section">
+    <div class="section-label">Multicolor // 多彩模式</div>
+    <div class="segmented" id="rainbowSeg">
+      <button class="seg-btn" data-rainbow="off" type="button">OFF</button>
+      <button class="seg-btn" data-rainbow="vivid" type="button">霓虹</button>
+      <button class="seg-btn" data-rainbow="soft" type="button">柔和</button>
+      <button class="seg-btn" data-rainbow="morandi" type="button">莫兰迪</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Bg pattern // 背景图案</div>
+    <div class="segmented" id="patternSeg">
+      <button class="seg-btn" data-pattern="off" type="button">OFF</button>
+      <button class="seg-btn" data-pattern="grid" type="button">GRID</button>
+      <button class="seg-btn" data-pattern="topo" type="button">TOPO</button>
+      <button class="seg-btn" data-pattern="radial" type="button">RADIAL</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Recent // 最近搜索</div>
+    <div class="history-list" id="historyList"></div>
+    <div class="empty" id="historyEmpty" hidden>暂无搜索记录</div>
+  </div>
+
+  <div class="footer">
+    <button class="btn" id="openNewTab" type="button">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+        <path d="M15 3h6v6"/>
+        <path d="M10 14 21 3"/>
+      </svg>
+      打开新标签页
+    </button>
+  </div>
   <div class="status" id="status"></div>
 
   <script src="popup.js"></script>
